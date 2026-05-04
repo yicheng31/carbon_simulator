@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24 hour carbon simulator</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <header class="status-bar">
+        <div class="status-item status-personal">
+            <span class="status-label">個人碳排放量</span>
+            <span class="status-value">0.00 <span class="unit">kg</span></span>
+            <span class="status-label status-label--secondary">個人環境壓力值</span>
+            <span class="status-value">0.00 <span class="unit">%</span></span>
+        </div>
+        <div class="status-item status-national">
+            <span class="status-label">台灣總人口碳排放量</span>
+            <span class="status-value">0.00 <span class="unit">kg</span></span>
+            <span class="status-label status-label--secondary">台灣總人口環境壓力值</span>
+            <span class="status-value">0.00 <span class="unit">%</span></span>
+        </div>
+    </header>
+    <main class="page-scroll">
+        <section class="scroll-section question-section question-step-1">
+            <div class="question-card">
+                <div class="question-meta">1 / 5</div>
+                <h2 class="question-title">早餐要吃什麼？</h2>
+                <table class="question-table">
+                    <tr>
+                        <td><button type="button" class="option-button" data-question="1" data-carbon="0.35" data-pressure="1.2">吐司</button></td>
+                        <td><button type="button" class="option-button" data-question="1" data-carbon="0.42" data-pressure="1.5">飯糰</button></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="scroll-section question-section question-step-2">
+            <div class="question-card">
+                <div class="question-meta">2 / 5</div>
+                <h2 class="question-title">中午搭什麼交通工具？</h2>
+                <table class="question-table">
+                    <tr>
+                        <td><button type="button" class="option-button" data-question="2" data-carbon="0.18" data-pressure="0.9">公車</button></td>
+                        <td><button type="button" class="option-button" data-question="2" data-carbon="0.12" data-pressure="0.7">捷運</button></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="scroll-section question-section question-step-3">
+            <div class="question-card">
+                <div class="question-meta">3 / 5</div>
+                <h2 class="question-title">晚餐要吃什麼？</h2>
+                <table class="question-table">
+                    <tr>
+                        <td><button type="button" class="option-button" data-question="3" data-carbon="1.35" data-pressure="2.3">火鍋</button></td>
+                        <td><button type="button" class="option-button" data-question="3" data-carbon="0.65" data-pressure="1.1">便當</button></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="scroll-section question-section question-step-4">
+            <div class="question-card">
+                <div class="question-meta">4 / 5</div>
+                <h2 class="question-title">下午要喝什麼？</h2>
+                <table class="question-table">
+                    <tr>
+                        <td><button type="button" class="option-button" data-question="4" data-carbon="0.45" data-pressure="1.8">手搖茶</button></td>
+                        <td><button type="button" class="option-button" data-question="4" data-carbon="0.05" data-pressure="0.2">自帶水</button></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="scroll-section question-section question-step-5">
+            <div class="question-card">
+                <div class="question-meta">5 / 5</div>
+                <h2 class="question-title">晚上休閒怎麼過？</h2>
+                <table class="question-table">
+                    <tr>
+                        <td><button type="button" class="option-button" data-question="5" data-carbon="1.00" data-pressure="1.4">看電影</button></td>
+                        <td><button type="button" class="option-button" data-question="5" data-carbon="0.08" data-pressure="0.3">在家讀書</button></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        
+    </main>
+    <scripts src="script.js"></script>
+</body>
+</html>
