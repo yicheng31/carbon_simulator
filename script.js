@@ -7,11 +7,19 @@ document.addEventListener('DOMContentLoaded', () => {
     welcomeModal.classList.remove('hidden');
   }
 
-  // Hide modal when start button is clicked
+  // Hide modal and scroll to first question when start button is clicked
   if (startBtn) {
     startBtn.addEventListener('click', () => {
       if (welcomeModal) {
         welcomeModal.classList.add('hidden');
+      }
+      
+      // Scroll to first question
+      const firstQuestion = document.querySelector('.question-step-1');
+      if (firstQuestion) {
+        setTimeout(() => {
+          firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
     });
   }
