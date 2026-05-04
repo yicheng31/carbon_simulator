@@ -7,14 +7,34 @@
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <header class="status-bar">
-        <div class="status-item status-personal">
-            <span class="status-label">個人碳排放量</span>
-            <span class="status-value">0.00 <span class="unit">kg</span></span>
-            <span class="status-label status-label--secondary">個人環境壓力值</span>
-            <span class="status-value">0.00 <span class="unit">%</span></span>
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>碳足跡日常</h1>
+            </div>
+            <div class="modal-body">
+                <p class="modal-subtitle">24 小時碳排放體驗</p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">🌍</div>
+                        <p>選擇日常生活方式</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <p>實時查看碳排放數據</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💡</div>
+                        <p>了解環保生活的影響</p>
+                    </div>
+                </div>
+                <p class="modal-description">透過回答 5 個簡單問題，認識到你的日常選擇如何影響地球。每一個決定都會影響碳排放量和環境壓力。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-button" id="startBtn">開始體驗</button>
+            </div>
         </div>
-    </header>
+    </div>
     <main class="page-scroll">
         <section class="scroll-section question-section question-step-1">
             <div class="question-card">
@@ -79,9 +99,7 @@
                     </tr>
                 </table>
             </div>
-        </section>
-
-        
+        </section>    
     </main>
     <scripts src="script.js"></script>
 </body>
