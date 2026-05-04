@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon Life — 24H 碳足跡模擬器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: #2a2a2a;
+  --text: #e8e6e0;
+  --muted: #666;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --orange: #fb923c;
+  --red: #f87171;
+  --accent: #4ade80;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Noto Sans TC', sans-serif;
+}
+ 
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+ 
+/* ─── NOISE OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.4;
+}
+ 
+/* ─── HEADER ─── */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+ 
+.logo {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+ 
+.header-stats {
+  display: flex; gap: 40px; align-items: center;
+}
+ 
+.hstat {
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.hstat-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.hstat-value {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  transition: color 0.5s;
+}
+ 
+.progress-bar-wrap {
+  height: 2px; background: var(--border);
+  position: absolute; bottom: 0; left: 0; right: 0;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--accent);
+  transition: width 0.5s ease, background 0.5s;
+  width: 0%;
+}
+ 
+/* ─── HERO ─── */
+.hero {
+  padding-top: 100px;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  position: relative;
+}
+ 
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+}
+ 
+.hero-title {
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin-bottom: 32px;
+  opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+}
+ 
+.hero-title em {
+  font-style: normal;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent);
+}
+ 
+.hero-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.8;
+  margin-bottom: 48px;
+  opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+}
+ 
+.start-btn {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 16px 40px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.2s;
+  opacity: 0; animation: fadeUp 0.8s 0.8s forwards;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(74,222,128,0.3); }
+ 
+.hero-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(74,222,128,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(74,222,128,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+ 
+/* ─── QUIZ SECTION ─── */
+#quiz-section { display: none; padding: 100px 20px 60px; max-width: 860px; margin: 0 auto; }
+ 
+/* ─── QUESTION CARD ─── */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 40px;
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.5s, transform 0.5s;
+  position: relative;
+  overflow: hidden;
+}
+ 
+.q-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--border);
+  transition: background 0.4s;
+}
+.q-card.answered::before { background: var(--accent); }
+.q-card.visible { opacity: 1; transform: translateY(0); }
+ 
+.q-meta {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+.q-num {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+}
+.q-category {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+ 
+.q-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.q-desc {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+ 
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+ 
+.opt-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--sans);
+}
+ 
+.opt-btn:hover {
+  border-color: #444;
+  background: #1e1e1e;
+}
+ 
+.opt-btn.selected {
+  border-color: var(--accent);
+  background: rgba(74,222,128,0.06);
+}
+ 
+.opt-icon { font-size: 1.5rem; display: block; margin-bottom: 8px; }
+.opt-label { font-size: 0.9rem; font-weight: 700; color: var(--text); display: block; }
+.opt-carbon {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 6px;
+  display: block;
+}
+.opt-btn.selected .opt-carbon { color: var(--accent); }
+ 
+.opt-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.badge-low { background: rgba(74,222,128,0.15); color: var(--green); }
+.badge-mid { background: rgba(250,204,21,0.15); color: var(--yellow); }
+.badge-high { background: rgba(248,113,113,0.15); color: var(--red); }
+ 
+/* ─── LIVE METER ─── */
+.live-meter {
+  position: fixed; right: 30px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  z-index: 90;
+}
+.meter-track {
+  width: 4px; height: 200px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.meter-fill {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, var(--red), var(--yellow), var(--green));
+  transition: height 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  height: 0%;
+}
+.meter-label {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  writing-mode: vertical-rl;
+  text-transform: uppercase;
+}
+ 
+/* ─── RESULT SECTION ─── */
+#result-section {
+  display: none;
+  padding: 100px 20px 80px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+ 
+.result-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 40px;
+  margin-bottom: 40px;
+}
+ 
+.result-tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+ 
+.result-score-big {
+  font-family: var(--mono);
+  font-size: clamp(4rem, 12vw, 9rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  transition: color 0.5s;
+}
+ 
+.result-unit {
+  font-family: var(--mono);
+  font-size: 1rem;
+  color: var(--muted);
+  margin-left: 8px;
+}
+ 
+.result-verdict {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+ 
+.result-desc-text {
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 0.9rem;
+}
+ 
+/* ─── COMPARISON CHART ─── */
+.section-title {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+ 
+.compare-grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+ 
+.compare-row {
+  display: flex; align-items: center; gap: 16px;
+}
+ 
+.compare-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  width: 100px;
+  flex-shrink: 0;
+}
+ 
+.compare-bar-wrap {
+  flex: 1; height: 24px; background: var(--surface2);
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+ 
+.compare-bar-fill {
+  height: 100%;
+  position: absolute; left: 0; top: 0;
+  transition: width 1s cubic-bezier(0.16,1,0.3,1);
+  width: 0%;
+}
+ 
+.compare-bar-fill.you { background: var(--accent); }
+.compare-bar-fill.tw { background: var(--yellow); }
+.compare-bar-fill.global { background: var(--orange); }
+.compare-bar-fill.paris { background: #60a5fa; }
+ 
+.compare-value {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+ 
+/* ─── BREAKDOWN ─── */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 40px;
+}
+ 
+.breakdown-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px 16px;
+  border-radius: 4px;
+}
+.breakdown-icon { font-size: 1.4rem; margin-bottom: 8px; }
+.breakdown-cat {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.breakdown-val {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+ 
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes dotBlink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+ 
+/* ─── RESPONSIVE ─── */
+@media (max-width: 600px) {
+  header { padding: 14px 20px; }
+  .header-stats { gap: 20px; }
+  .options-grid { grid-template-columns: 1fr; }
+  .live-meter { display: none; }
+  .q-card { padding: 24px 20px; }
+  #quiz-section, #result-section { padding: 90px 16px 60px; }
+}
+ 
+/* ─── SOURCE TAG ─── */
+.q-source-tag {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: #4ade8088;
+  border: 1px solid #4ade8033;
+  padding: 2px 7px;
+  border-radius: 2px;
+  margin-left: auto;
+  cursor: help;
+}
+ 
+.opt-src {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: #555;
+  margin-top: 5px;
+  display: block;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.opt-btn.selected .opt-src { color: #4ade8066; }
+.opt-btn:hover .opt-src { color: #777; }
+ 
+/* ─── DATA SOURCE FOOTER ─── */
+.data-source-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid #4ade8044;
+  padding: 20px 24px;
+  margin-bottom: 40px;
+  border-radius: 4px;
+}
+.ds-title {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.ds-list {
+  list-style: none;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ds-list li {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.ds-list li::before { content: '→'; color: #4ade8066; flex-shrink: 0; }
+.ds-list a { color: #4ade8099; text-decoration: none; }
+.ds-list a:hover { color: var(--accent); }
+ 
+</style>
+</head>
+<body>
+ 
+<!-- HEADER -->
+<header>
+  <div class="logo">◈ Carbon Life</div>
+  <div class="header-stats">
+    <div class="hstat">
+      <span class="hstat-label">累積排放</span>
+      <span class="hstat-value" id="h-carbon">—</span>
+    </div>
+    <div class="hstat">
+      <span class="hstat-label">進度</span>
+      <span class="hstat-value" id="h-progress">0/10</span>
+    </div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+</header>
+ 
+<!-- SIDE METER -->
+<div class="live-meter" id="live-meter" style="display:none">
+  <div class="meter-label">壓力指數</div>
+  <div class="meter-track">
+    <div class="meter-fill" id="meter-fill"></div>
+  </div>
+</div>
+ 
+<!-- HERO -->
+<section class="hero" id="hero-section">
+  <div class="hero-grid"></div>
+  <div class="hero-tag">/ 24 Hour Carbon Simulator / 2025</div>
+  <h1 class="hero-title">CARBON<br><em>LIFE</em></h1>
+  <p class="hero-sub">你的每一個日常選擇，都在為地球加溫或降溫。<br>追蹤你 24 小時的碳足跡，與全球數據對比，獲取 AI 專屬減碳方案。</p>
+  <button class="start-btn" onclick="startQuiz()">開始模擬 →</button>
+</section>
+ 
+<!-- QUIZ -->
+<section id="quiz-section"></section>
+ 
+<!-- RESULT -->
+<section id="result-section">
+  <div class="result-header">
+    <div class="result-tag">/ 你的 24H 碳足跡報告</div>
+    <div>
+      <span class="result-score-big" id="r-score">0.00</span>
+      <span class="result-unit">kg CO₂e / 日</span>
+    </div>
+    <div class="result-verdict" id="r-verdict"></div>
+    <div class="result-desc-text" id="r-desc"></div>
+  </div>
+ 
+  <div class="section-title">// 與全球基準比較</div>
+  <div class="compare-grid" id="compare-grid"></div>
+ 
+  <div class="section-title">// 排放來源分解</div>
+  <div class="breakdown-grid" id="breakdown-grid"></div>
+  <div class="ai-title">Claude AI · 正在分析你的生活模式</div>
+    </div>
+    <div class="ai-content" id="ai-content">
+      <div class="ai-loading"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+ 
+ 
+  <div class="section-title">// 資料來源與引用說明</div>
+  <div class="data-source-box">
+    <div class="ds-title">數據引用來源 · Data Sources</div>
+    <ul class="ds-list">
+      <li>
+        環境部「碳足跡排放係數資料庫」CFP_P_02（快照日期 2026-05）
+        <a href="https://data.moenv.gov.tw/dataset/detail/CFP_P_02" target="_blank">↗ 開放資料平台</a>
+      </li>
+      <li>
+        環境部「產品碳足跡資訊網」cfp.moenv.gov.tw — 蔬食便當 1.0 kg、葷食便當均值 3.25 kg、寶特瓶 0.15 kg/瓶
+        <a href="https://cfp.moenv.gov.tw/WebPage/WebSites/CoefficientDB.aspx" target="_blank">↗ 係數資料庫</a>
+      </li>
+      <li>經濟部能源署 112 年電力排碳係數：<strong style="color:#e8e6e0">0.494 kgCO₂/度</strong></li>
+      <li>交通部 111 年民眾日常使用運具狀況調查 — 汽車 0.173、火車 0.06、高鐵 0.032、捷運/公車 0.04 kgCO₂e/人公里</li>
+      <li>桃園市政府環保局「低碳活動指引評核項目說明 PLUS 版 v2」— 冷氣 1.4/hr、蔬食/葷食便當係數</li>
+      <li>環境部氣候變遷署「溫室氣體排放係數管理表 6.0.4 版」— 航空、柴油移動源係數</li>
+    </ul>
+  </div>
+ 
+  <button class="restart-btn" onclick="location.reload()">↺ 重新模擬</button>
+</section>
+ 
+<script>
+/* ─── OFFICIAL COEFFICIENT DATABASE SNAPSHOT ───────────────────────────
+   資料來源：環境部「碳足跡排放係數資料庫」(CFP_P_02)
+   平台：https://data.moenv.gov.tw/dataset/detail/CFP_P_02
+   補充來源：
+   - 交通部 111 年民眾日常使用運具狀況調查（交通係數）
+   - 經濟部 112 年公告電力排碳係數 0.494 kgCO₂/度
+   - 桃園市政府環保局「低碳活動指引」係數表 v2（餐飲、包材）
+   - 環境部氣候變遷署溫室氣體排放係數管理表 6.0.4 版
+   快照日期：2026-05
+   ─────────────────────────────────────────────────── */
+ 
+// 係數說明物件（用於結果頁浮動提示）
+const COEFF_SOURCES = {
+  transport: "交通部 111 年運具調查＋環保署綠色車輛指南",
+  food:      "環境部碳足跡係數資料庫 CFP_P_02（桃園市低碳活動指引 v2）",
+  energy:    "經濟部 112 年電力碳排係數 0.494 kgCO₂/度",
+  product:   "環境部碳足跡係數資料庫 CFP_P_02",
+  travel:    "環境部氣候變遷署溫室氣體排放係數管理表 6.0.4 版",
+};
+ 
+/* ─── QUESTIONS DATA ─── */
+const questions = [
+  {
+    id: 1, category: "交通", icon: "🚗",
+    title: "早晨通勤：你的主要交通工具？",
+    desc: "交通排放佔台灣溫室氣體約 13%。同樣通勤 10 公里，不同工具的碳排差距可達 40 倍以上。",
+    sourceKey: "transport",
+    options: [
+      // 步行/腳踏車：零排放
+      { label: "步行 / 腳踏車", icon: "🚲", kg: 0.00, badge: "low",
+        note: "0.00 kg CO₂e", src: "零化石燃料消耗" },
+      // 捷運：0.04 kgCO₂e/人公里 × 10km（交通部調查）
+      { label: "捷運 / 公車", icon: "🚇", kg: 0.40, badge: "low",
+        note: "0.40 kg CO₂e", src: "捷運 0.04/人公里 × 10km｜交通部調查" },
+      // 機車：0.068 kgCO₂e/公里（環保署綠色車輛指南），10km
+      { label: "機車（燃油）", icon: "🛵", kg: 0.68, badge: "mid",
+        note: "0.68 kg CO₂e", src: "機車 0.068/km × 10km｜環保署綠色車輛指南" },
+      // 汽車：0.173 kgCO₂e/人公里（交通部調查），10km，獨自駕車
+      { label: "獨自開車（燃油）", icon: "🚗", kg: 1.73, badge: "high",
+        note: "1.73 kg CO₂e", src: "汽車 0.173/人公里 × 10km｜交通部 111 年調查" },
+    ]
+  },
+  {
+    id: 2, category: "飲食", icon: "🍳",
+    title: "早餐選擇？",
+    desc: "食物生產佔全球溫室氣體排放約 26%。一份早餐看似小，但食材來源決定了截然不同的碳代價。",
+    sourceKey: "food",
+    options: [
+      // 燕麥/水果：穀物類約 0.5 kgCO₂e/kg，一份約 200g
+      { label: "自製燕麥 / 水果", icon: "🥣", kg: 0.10, badge: "low",
+        note: "0.10 kg CO₂e", src: "穀物係數約 0.5/kg × 200g｜CFP_P_02" },
+      // 蛋餅：雞蛋係數約 3.0 kgCO₂e/kg，蛋 50g + 蔬菜麵粉，約 0.35
+      { label: "在地早餐店（蛋餅）", icon: "🥚", kg: 0.35, badge: "low",
+        note: "0.35 kg CO₂e", src: "雞蛋係數 3.0/kg × 約 50g + 澱粉｜CFP_P_02" },
+      // 漢堡：牛肉漢堡 MAX 標示 2.8 kgCO₂e，取保守值
+      { label: "連鎖速食漢堡", icon: "🍔", kg: 1.10, badge: "mid",
+        note: "1.10 kg CO₂e", src: "速食漢堡實測參考值（牛肉+麵包+包材）" },
+      // 外送培根+蛋：豬肉係數約 5.9/kg，培根 80g ≈ 0.47；加外送配送約 0.63
+      { label: "外送培根歐姆蛋", icon: "🥓", kg: 1.10, badge: "mid",
+        note: "1.10 kg CO₂e", src: "豬肉係數 5.9/kg × 80g + 外送 0.626/km × 距離｜CFP_P_02" },
+    ]
+  },
+  {
+    id: 3, category: "辦公", icon: "💻",
+    title: "工作模式？",
+    desc: "用電碳排 = 用電度數 × 0.494 kgCO₂/度（112 年經濟部公告係數）。辦公室冷氣 8 小時約消耗 5.6 kgCO₂e/台。",
+    sourceKey: "energy",
+    options: [
+      // 居家遠端：電腦 150W × 8hr = 1.2 度 × 0.494 = 0.59，加上照明 ≈ 0.30
+      { label: "在家遠端工作", icon: "🏠", kg: 0.30, badge: "low",
+        note: "0.30 kg CO₂e", src: "電腦+照明用電 × 0.494 kgCO₂/度｜經濟部 112 年" },
+      // 共享空間：人均分攤冷氣照明
+      { label: "共享辦公空間", icon: "🏢", kg: 0.55, badge: "low",
+        note: "0.55 kg CO₂e", src: "人均分攤冷氣 × 0.494/度｜經濟部係數" },
+      // 辦公室冷氣：5.6 kgCO₂e/台/8hr，多台設備分攤人均約 0.90
+      { label: "一般辦公室（冷氣開整天）", icon: "❄️", kg: 0.90, badge: "mid",
+        note: "0.90 kg CO₂e", src: "冷氣 1.4/hr × 8hr × 0.494/度；每台 5.6 kgCO₂e｜桃園低碳指引" },
+      // 出差飛機：短程台灣→東京約 0.1 tCO₂e；此為一天均攤約 4.5
+      { label: "需長途出差（飛機）", icon: "✈️", kg: 4.50, badge: "high",
+        note: "4.50 kg CO₂e", src: "航空碳排係數管理表 6.0.4 版｜環境部氣候變遷署" },
+    ]
+  },
+  {
+    id: 4, category: "午餐", icon: "🍱",
+    title: "午餐怎麼吃？",
+    desc: "蔬食便當約 1.0 kgCO₂e；葷食便當平均約 3.25 kgCO₂e——相差 3 倍以上（桃園市低碳活動指引官方數值）。",
+    sourceKey: "food",
+    options: [
+      // 蔬食便當：官方係數平均值 1.0 kgCO₂e
+      { label: "素食便當 / 蔬食", icon: "🥗", kg: 1.00, badge: "low",
+        note: "1.00 kg CO₂e", src: "蔬食便當官方係數 1.0/個｜環境部低碳活動指引 v2" },
+      // 雞肉/豬肉：葷食便當平均 3.25，雞豬取偏低側約 2.0
+      { label: "雞肉或豬肉料理", icon: "🍗", kg: 2.00, badge: "mid",
+        note: "2.00 kg CO₂e", src: "葷食便當係數 2.5~4.0/個，禽豬取低側｜CFP_P_02" },
+      // 牛肉麵：葷食便當平均 3.25（官方）
+      { label: "牛肉麵 / 牛肉漢堡", icon: "🍜", kg: 3.25, badge: "high",
+        note: "3.25 kg CO₂e", src: "葷食便當官方均值 3.25/個｜桃園低碳活動指引 v2" },
+      // 進口牛排：牛肉係數遠高於豬雞，加空運
+      { label: "進口牛排（含運輸）", icon: "🥩", kg: 5.00, badge: "high",
+        note: "5.00 kg CO₂e", src: "牛肉係數高 + 空運加成｜CFP_P_02 推算" },
+    ]
+  },
+  {
+    id: 5, category: "消費", icon: "🛍️",
+    title: "今天你購物了嗎？",
+    desc: "聚酯纖維（人造材質）碳排係數 4.45 kgCO₂e/kg（CFP_P_02）；PVC 帆布 3.02/kg；PP 塑膠袋 1.95/kg。",
+    sourceKey: "product",
+    options: [
+      // 不購物
+      { label: "沒有購物", icon: "🙅", kg: 0.00, badge: "low",
+        note: "0.00 kg CO₂e", src: "零消費排放" },
+      // 二手衣：幾乎無新生產碳排，僅含二手交易運輸
+      { label: "購買二手衣物", icon: "♻️", kg: 0.10, badge: "low",
+        note: "0.10 kg CO₂e", src: "二手無新生產排放，僅物流｜估算" },
+      // 快時尚T恤：人造材質 4.45/kg × 約 250g = 1.11 + 包材 PVC 3.02 × 少量
+      { label: "網購一件衣服（快時尚）", icon: "👕", kg: 1.60, badge: "mid",
+        note: "1.60 kg CO₂e", src: "聚酯材質 4.45/kg × 250g + 包材 PVC 3.02/kg｜CFP_P_02" },
+      // 智慧型手機：生產約 70~80 kgCO₂e，均攤 2 年使用 = 每日約 8
+      { label: "購買新手機（均攤當日）", icon: "📱", kg: 8.00, badge: "high",
+        note: "8.00 kg CO₂e", src: "智慧型手機生產 ~70kg，均攤 2 年｜CFP_P_02 推算" },
+    ]
+  },
+  {
+    id: 6, category: "家電", icon: "🌡️",
+    title: "夏季空調使用習慣？",
+    desc: "每台冷氣設定 22°C 運行 4 小時 = 5.6 kgCO₂e。溫度每調高 1°C 省電 6%，電力係數 0.494 kgCO₂/度（112 年）。",
+    sourceKey: "energy",
+    options: [
+      // 不開冷氣：僅電風扇，耗電極低
+      { label: "不開冷氣，電風扇", icon: "🍃", kg: 0.06, badge: "low",
+        note: "0.06 kg CO₂e", src: "電風扇 60W × 4hr × 0.494/度｜經濟部係數" },
+      // 26°C + 電扇：節電 24%，1.4/hr × 4hr × 0.76 × 0.494 ≈ 0.42 kg
+      { label: "26°C，搭配電扇", icon: "🌀", kg: 0.42, badge: "low",
+        note: "0.42 kg CO₂e", src: "設定 26°C 省電 24%；1.4/hr × 4hr × 0.76 × 0.494｜桃園低碳指引" },
+      // 22°C，4hr：5.6 kgCO₂e/台（官方係數）
+      { label: "22°C，全日運轉", icon: "💨", kg: 2.77, badge: "mid",
+        note: "2.77 kg CO₂e", src: "22°C 4hr = 5.6 kgCO₂e；8hr 約 2.77/人（2 人共用）｜低碳指引 v2" },
+      // 18°C：效能最低，耗電倍增；估算
+      { label: "18°C，強力全開", icon: "🥶", kg: 4.20, badge: "high",
+        note: "4.20 kg CO₂e", src: "18°C vs 26°C 額外耗電 +48%，全日高負載｜係數推算" },
+    ]
+  },
+  {
+    id: 7, category: "飲食", icon: "🧃",
+    title: "日常飲水與飲料？",
+    desc: "一瓶 600ml 寶特瓶裝水碳排 0.15 kgCO₂e（環境部 CFP_P_02 收錄產品實測值）。",
+    sourceKey: "food",
+    options: [
+      // 自帶水壺：幾近零排放
+      { label: "自帶水壺（自來水）", icon: "🫙", kg: 0.01, badge: "low",
+        note: "0.01 kg CO₂e", src: "自來水處理用電極低｜估算" },
+      // 台灣茶：在地農產，碳排低
+      { label: "台灣茶 / 在地咖啡", icon: "🍵", kg: 0.15, badge: "low",
+        note: "0.15 kg CO₂e", src: "在地農產 + 紙杯 0.011/個｜CFP_P_02 + 低碳指引" },
+      // 寶特瓶裝水 × 2 + 手搖飲（含一次性杯）
+      { label: "瓶裝水 + 手搖飲", icon: "🧋", kg: 0.60, badge: "mid",
+        note: "0.60 kg CO₂e", src: "瓶裝水 0.15/瓶 × 2 + 飲料杯 0.029/個｜CFP_P_02" },
+      // 進口氣泡水（玻璃瓶）+ 連鎖咖啡（空運豆）
+      { label: "進口氣泡水 + 連鎖咖啡", icon: "☕", kg: 1.00, badge: "high",
+        note: "1.00 kg CO₂e", src: "進口包材高碳排 + 空運咖啡豆加成｜推算" },
+    ]
+  },
+  {
+    id: 8, category: "娛樂", icon: "📺",
+    title: "晚上的娛樂方式？",
+    desc: "照明用電係數 0.494 kgCO₂/度，一顆 41W 燈泡開 4 小時約 0.08 kg；PC 遊戲主機約 300W。",
+    sourceKey: "energy",
+    options: [
+      // 閱讀：幾乎無額外用電
+      { label: "閱讀、散步、下棋", icon: "📖", kg: 0.02, badge: "low",
+        note: "0.02 kg CO₂e", src: "閱讀燈 41W × 1hr × 0.494/度｜經濟部係數" },
+      // 串流 2hr：路由器 + TV，約 100W × 2hr
+      { label: "串流追劇（2 小時）", icon: "📺", kg: 0.10, badge: "low",
+        note: "0.10 kg CO₂e", src: "電視 100W + 路由器 × 2hr × 0.494/度｜經濟部係數" },
+      // PC遊戲：300W × 3hr × 0.494 ≈ 0.44
+      { label: "電玩遊戲（PC）", icon: "🎮", kg: 0.44, badge: "mid",
+        note: "0.44 kg CO₂e", src: "PC 300W × 3hr × 0.494/度｜經濟部係數" },
+      // 演唱會：交通 + 場館用電分攤
+      { label: "戶外大型演唱會", icon: "🎸", kg: 1.20, badge: "high",
+        note: "1.20 kg CO₂e", src: "場館電力 + 交通分攤 + 冷氣｜推算" },
+    ]
+  },
+  {
+    id: 9, category: "晚餐", icon: "🍽️",
+    title: "晚餐選擇？",
+    desc: "官方數據：蔬食便當 1.0 kgCO₂e、葷食便當均值 3.25 kgCO₂e、一週一日蔬食一年可減碳 101.4 kg。",
+    sourceKey: "food",
+    options: [
+      // 自煮蔬食：食材碳排低，無外食包裝
+      { label: "自煮蔬食料理", icon: "🥦", kg: 0.80, badge: "low",
+        note: "0.80 kg CO₂e", src: "蔬菜穀物係數低 + 自煮省包材｜CFP_P_02" },
+      // 家常雞魚：禽類及魚類碳排居中
+      { label: "家常雞魚料理", icon: "🐟", kg: 1.50, badge: "low",
+        note: "1.50 kg CO₂e", src: "禽魚碳排中等，蔬食便當 1.0 < 本項 < 葷食均值｜CFP_P_02" },
+      // 熱炒豬肉：葷食便當均值 3.25
+      { label: "外食熱炒（豬肉）", icon: "🍛", kg: 3.25, badge: "high",
+        note: "3.25 kg CO₂e", src: "葷食便當官方均值 3.25/個｜桃園低碳活動指引 v2" },
+      // 火鍋燒烤：肉類多 + 食材浪費，約 4~5 kgCO₂e
+      { label: "燒烤 / 火鍋大餐", icon: "🔥", kg: 4.50, badge: "high",
+        note: "4.50 kg CO₂e", src: "葷食多樣 + 食材浪費加乘；參考 3.25 均值上緣｜CFP_P_02" },
+    ]
+  },
+  {
+    id: 10, category: "旅遊", icon: "✈️",
+    title: "這個月你計畫旅遊嗎？",
+    desc: "火車 0.06 kgCO₂e/人公里；高鐵 0.032/人公里；航空依溫室氣體排放係數管理表 6.0.4 版計算。",
+    sourceKey: "travel",
+    options: [
+      // 不旅遊
+      { label: "不旅遊，待在本地", icon: "🏡", kg: 0.00, badge: "low",
+        note: "0.00 kg CO₂e", src: "無旅遊排放" },
+      // 火車島內：0.06/人公里 × 300km（北高）= 18，均攤 30 天 = 0.60
+      { label: "台灣島內（台鐵）", icon: "🚆", kg: 0.60, badge: "low",
+        note: "0.60 kg CO₂e", src: "火車 0.06/人公里 × 300km ÷ 30 天｜交通部 111 年調查" },
+      // 短程飛機台灣→日本：約 200~400 kgCO₂e 來回，均攤 30 天 ≈ 3.0
+      { label: "短程飛機（日本來回）", icon: "🛫", kg: 3.00, badge: "mid",
+        note: "3.00 kg CO₂e", src: "台日來回約 270 kgCO₂e ÷ 30 天｜溫室氣體排放係數 6.0.4" },
+      // 長途歐美：來回約 3~5 tCO₂e，均攤 30 天 ≈ 7.0
+      { label: "長途飛機（歐美來回）", icon: "🌏", kg: 7.00, badge: "high",
+        note: "7.00 kg CO₂e", src: "台歐來回約 3,500 kgCO₂e ÷ 30 天｜溫室氣體排放係數 6.0.4" },
+    ]
+  },
+];
+ 
+/* ─── STATE ─── */
+let answers = {};
+const MAX_KG = 25;
+ 
+/* ─── BADGE LOGIC ─── */
+function badgeClass(b) {
+  return b === 'low' ? 'badge-low' : b === 'mid' ? 'badge-mid' : 'badge-high';
+}
+function badgeText(b) {
+  return b === 'low' ? '低碳' : b === 'mid' ? '中碳' : '高碳';
+}
+ 
+/* ─── BUILD QUIZ ─── */
+function buildQuiz() {
+  const section = document.getElementById('quiz-section');
+  section.innerHTML = '';
+  questions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${q.id}`;
+    card.innerHTML = `
+      <div class="q-meta">
+        <span class="q-num">Q${String(q.id).padStart(2,'0')}</span>
+        <span class="q-category">${q.icon} ${q.category}</span>
+        <span class="q-source-tag" title="${COEFF_SOURCES[q.sourceKey]}">⚗ 官方係數</span>
+      </div>
+      <div class="q-title">${q.title}</div>
+      <div class="q-desc">${q.desc}</div>
+      <div class="options-grid">
+        ${q.options.map((opt) => `
+          <button class="opt-btn" onclick="selectOption(${q.id}, ${opt.kg}, '${opt.icon}', '${q.category}', this)">
+            <span class="opt-badge ${badgeClass(opt.badge)}">${badgeText(opt.badge)}</span>
+            <span class="opt-icon">${opt.icon}</span>
+            <span class="opt-label">${opt.label}</span>
+            <span class="opt-carbon">${opt.note}</span>
+            <span class="opt-src">📋 ${opt.src.split('｜')[0]}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+    section.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), 80 * i);
+  });
+ 
+  // Finish placeholder
+  const fin = document.createElement('div');
+  fin.id = 'finish-placeholder';
+  fin.style.height = '60px';
+  section.appendChild(fin);
+}
+ 
+/* ─── SELECT OPTION ─── */
+function selectOption(qId, kg, icon, category, btn) {
+  answers[qId] = { kg, icon, category };
+  const card = document.getElementById(`qcard-${qId}`);
+  card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  card.classList.add('answered');
+  updateHeader();
+ 
+  if (Object.keys(answers).length === questions.length) {
+    setTimeout(showResult, 600);
+  }
+}
+ 
+/* ─── UPDATE HEADER ─── */
+function updateHeader() {
+  const total = Object.values(answers).reduce((s, a) => s + a.kg, 0);
+  const answered = Object.keys(answers).length;
+  document.getElementById('h-carbon').textContent = total.toFixed(2) + ' kg';
+  document.getElementById('h-progress').textContent = `${answered}/${questions.length}`;
+  document.getElementById('progress-fill').style.width = `${(answered / questions.length) * 100}%`;
+  document.getElementById('meter-fill').style.height = `${Math.min((total / MAX_KG) * 100, 100)}%`;
+ 
+  // Accent color
+  const pct = (total / MAX_KG) * 100;
+  const color = pct > 60 ? '#f87171' : pct > 30 ? '#facc15' : '#4ade80';
+  document.documentElement.style.setProperty('--accent', color);
+}
+ 
+/* ─── START ─── */
+function startQuiz() {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('quiz-section').style.display = 'block';
+  document.getElementById('live-meter').style.display = 'flex';
+  buildQuiz();
+  window.scrollTo({ top: 0 });
+}
+ 
+/* ─── SHOW RESULT ─── */
+function showResult() {
+  document.getElementById('quiz-section').style.display = 'none';
+  document.getElementById('live-meter').style.display = 'none';
+  const section = document.getElementById('result-section');
+  section.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+ 
+  const total = Object.values(answers).reduce((s, a) => s + a.kg, 0);
+  document.getElementById('r-score').textContent = total.toFixed(2);
+ 
+  // Verdict
+  let verdict, desc, color;
+  if (total < 5) {
+    verdict = "🍀 低碳楷模"; color = '#4ade80';
+    desc = "你的生活方式與《巴黎協定》1.5°C 目標高度一致。你的日均排放遠低於台灣平均值，繼續保持！";
+  } else if (total < 12) {
+    verdict = "🌍 接近平均"; color = '#facc15';
+    desc = "你的碳足跡接近台灣人均水準，有幾個關鍵選項若調整，可顯著降低排放。";
+  } else if (total < 20) {
+    verdict = "🌋 超出警戒線"; color = '#fb923c';
+    desc = "你的生活方式對地球造成明顯壓力，高碳選項集中在飲食與交通，有很大改善空間。";
+  } else {
+    verdict = "🔥 極高碳排放"; color = '#f87171';
+    desc = "警報！你的碳足跡是台灣平均值的數倍，建議立即從最高碳選項開始改變。";
+  }
+  document.getElementById('r-verdict').textContent = verdict;
+  document.getElementById('r-desc').textContent = desc;
+  document.getElementById('r-score').style.color = color;
+  document.documentElement.style.setProperty('--accent', color);
+  document.getElementById('progress-fill').style.background = color;
+ 
+  // COMPARISON
+  const benchmarks = [
+    { label: '你今天', kg: total, cls: 'you' },
+    { label: '台灣平均', kg: 14.0, cls: 'tw' },
+    { label: '全球平均', kg: 11.5, cls: 'global' },
+    { label: '巴黎目標', kg: 3.0, cls: 'paris' },
+  ];
+  const maxKg = Math.max(...benchmarks.map(b => b.kg), 1);
+  const compareGrid = document.getElementById('compare-grid');
+  compareGrid.innerHTML = benchmarks.map(b => `
+    <div class="compare-row">
+      <div class="compare-label">${b.label}</div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar-fill ${b.cls}" style="width:0%" data-pct="${(b.kg/maxKg)*100}"></div>
+      </div>
+      <div class="compare-value">${b.kg.toFixed(1)} kg</div>
+    </div>
+  `).join('');
+  setTimeout(() => {
+    document.querySelectorAll('.compare-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 100);
+ 
+  // BREAKDOWN by category
+  const catTotals = {};
+  Object.values(answers).forEach(a => {
+    catTotals[a.category] = (catTotals[a.category] || 0) + a.kg;
+  });
+  const breakdownGrid = document.getElementById('breakdown-grid');
+  breakdownGrid.innerHTML = Object.entries(catTotals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, kg]) => {
+      const q = questions.find(q => q.category === cat);
+      return `
+        <div class="breakdown-item">
+          <div class="breakdown-icon">${q ? q.icon : '📦'}</div>
+          <div class="breakdown-cat">${cat}</div>
+          <div class="breakdown-val">${kg.toFixed(2)} kg</div>
+        </div>
+      `;
+    }).join('');
+}
+</script>
+</body>
+</html>
