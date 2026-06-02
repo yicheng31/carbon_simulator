@@ -6,30 +6,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carbon Life — 24H 碳足跡模擬器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;700;900&family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0a;
-  --surface: #111111;
-  --surface2: #161616;
-  --border: #222;
-  --border2: #2a2a2a;
-  --text: #e8e6e0;
-  --muted: #555;
-  --muted2: #888;
-  --green: #4ade80;
-  --yellow: #facc15;
-  --orange: #fb923c;
-  --red: #f87171;
-  --blue: #60a5fa;
-  --accent: #4ade80;
+  --bg: #0c0a09;
+  --bg2: #141210;
+  --surface: rgba(255,248,240,0.04);
+  --surface2: rgba(255,248,240,0.07);
+  --border: rgba(255,248,240,0.08);
+  --border2: rgba(255,248,240,0.14);
+  --text: #ede9e3;
+  --muted: rgba(237,233,227,0.42);
+  --muted2: rgba(237,233,227,0.62);
+  --accent: #f0c878;
+  --accent-glow: rgba(240,200,120,0.15);
+  --hot: #f87171;
+  --warm: #fb923c;
+  --mild: #facc15;
+  --cool: #7dd3fc;
+  --green: #6ee7b7;
   --mono: 'Space Mono', monospace;
   --sans: 'Noto Sans TC', sans-serif;
+  --serif: 'Spectral', Georgia, serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -39,1463 +41,1536 @@ font-family: var(–sans);
 min-height: 100vh;
 overflow-x: hidden;
 -webkit-font-smoothing: antialiased;
+transition: background 2s ease;
 }
 
+/* Noise */
 body::before {
 content: ‘’;
 position: fixed; inset: 0;
-background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.03’/%3E%3C/svg%3E”);
-pointer-events: none; z-index: 9999; opacity: 0.35;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none; z-index: 9999; opacity: 0.3;
 }
 
 /* ── HEADER ── */
 header {
 position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-background: rgba(10,10,10,0.95);
-backdrop-filter: blur(24px);
-border-bottom: 1px solid var(–border);
-padding: 0 40px;
-height: 56px;
+height: 52px;
 display: flex; align-items: center; justify-content: space-between;
+padding: 0 40px;
+background: rgba(6,13,20,0.9);
+backdrop-filter: blur(20px);
+border-bottom: 1px solid var(–border);
+transition: background 2s ease;
 }
-
 .logo {
 font-family: var(–mono);
-font-size: 0.7rem;
-letter-spacing: 0.25em;
+font-size: 0.65rem;
+letter-spacing: 0.3em;
 color: var(–accent);
 text-transform: uppercase;
-transition: color 0.6s;
+transition: color 1.5s;
 }
-
-.header-right {
-display: flex; gap: 32px; align-items: center;
-}
-
-.hstat {
-display: flex; flex-direction: column; align-items: flex-end;
-}
-.hstat-label {
+.header-r { display: flex; gap: 28px; align-items: center; }
+.hstat { display: flex; flex-direction: column; align-items: flex-end; }
+.hstat-lbl {
 font-family: var(–mono);
-font-size: 0.55rem;
+font-size: 0.5rem;
 letter-spacing: 0.12em;
 color: var(–muted);
 text-transform: uppercase;
 }
-.hstat-value {
+.hstat-val {
 font-family: var(–mono);
-font-size: 0.95rem;
+font-size: 0.9rem;
 font-weight: 700;
 color: var(–accent);
-transition: color 0.6s;
+transition: color 1.5s;
 }
-
-.header-progress {
+.hbar-wrap {
 position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
 background: var(–border);
 }
-.header-progress-fill {
+.hbar-fill {
 height: 100%;
 background: var(–accent);
 width: 0%;
-transition: width 0.5s var(–ease), background 0.6s;
+transition: width 0.5s var(–ease), background 1.5s;
 }
 
 /* ── HERO ── */
 .hero {
-padding-top: 56px;
+padding-top: 52px;
 min-height: 100vh;
-display: flex; flex-direction: column; align-items: center; justify-content: center;
+display: flex; flex-direction: column;
+align-items: center; justify-content: center;
 text-align: center;
 position: relative;
 padding-left: 20px; padding-right: 20px;
+overflow: hidden;
 }
-
 .hero-grid {
 position: absolute; inset: 0; pointer-events: none;
 background-image:
-linear-gradient(rgba(74,222,128,0.025) 1px, transparent 1px),
-linear-gradient(90deg, rgba(74,222,128,0.025) 1px, transparent 1px);
-background-size: 64px 64px;
-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 20%, transparent 80%);
+linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+background-size: 72px 72px;
+mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 15%, transparent 70%);
 }
-
+.hero-orb {
+position: absolute;
+width: 600px; height: 600px;
+border-radius: 50%;
+background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 70%);
+pointer-events: none;
+top: 50%; left: 50%;
+transform: translate(-50%, -50%);
+}
 .hero-eyebrow {
 font-family: var(–mono);
-font-size: 0.6rem;
-letter-spacing: 0.4em;
+font-size: 0.58rem;
+letter-spacing: 0.45em;
 color: var(–accent);
 text-transform: uppercase;
-margin-bottom: 28px;
-opacity: 0; animation: riseIn 0.9s 0.1s var(–ease) forwards;
+margin-bottom: 24px;
+opacity: 0; animation: rise 1s 0.1s var(–ease) forwards;
 }
-
 .hero-title {
-font-size: clamp(3.5rem, 11vw, 9rem);
+font-size: clamp(3.5rem, 12vw, 9.5rem);
 font-weight: 900;
-line-height: 0.88;
+line-height: 0.86;
 letter-spacing: -0.04em;
 margin-bottom: 28px;
-opacity: 0; animation: riseIn 0.9s 0.25s var(–ease) forwards;
+opacity: 0; animation: rise 1s 0.25s var(–ease) forwards;
 }
 .hero-title em {
-font-style: normal;
+font-style: italic;
 color: transparent;
 -webkit-text-stroke: 1.5px var(–accent);
+transition: -webkit-text-stroke-color 1.5s;
 }
-
 .hero-sub {
-font-size: 0.95rem;
+font-size: 0.9rem;
 color: var(–muted2);
-max-width: 420px;
-line-height: 1.9;
-margin-bottom: 52px;
-opacity: 0; animation: riseIn 0.9s 0.4s var(–ease) forwards;
+max-width: 400px;
+line-height: 2;
+margin-bottom: 48px;
 font-weight: 300;
+opacity: 0; animation: rise 1s 0.4s var(–ease) forwards;
 }
-
-.cta-btn {
+.start-btn {
 font-family: var(–mono);
-font-size: 0.7rem;
+font-size: 0.68rem;
 letter-spacing: 0.25em;
 text-transform: uppercase;
 background: var(–accent);
-color: #000;
-border: none;
-padding: 16px 44px;
-cursor: pointer;
+color: #020a10;
+border: none; cursor: pointer;
+padding: 15px 44px;
 font-weight: 700;
-transition: 0.2s;
-opacity: 0; animation: riseIn 0.9s 0.55s var(–ease) forwards;
 clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+transition: transform 0.2s, box-shadow 0.2s, background 1.5s;
+opacity: 0; animation: rise 1s 0.55s var(–ease) forwards;
 }
-.cta-btn:hover {
+.start-btn:hover {
 transform: translateY(-3px);
-box-shadow: 0 10px 40px rgba(74,222,128,0.25);
+box-shadow: 0 12px 40px var(–accent-glow);
 }
-
-.hero-facts {
-position: absolute; bottom: 40px;
-display: flex; gap: 48px;
-opacity: 0; animation: riseIn 0.9s 0.7s var(–ease) forwards;
+.hero-data {
+position: absolute; bottom: 36px;
+display: flex; gap: 52px;
+opacity: 0; animation: rise 1s 0.7s var(–ease) forwards;
 }
-.hero-fact {
-text-align: center;
-}
-.hero-fact-num {
+.hero-datum { text-align: center; }
+.hero-datum-n {
 font-family: var(–mono);
-font-size: 1.4rem;
-font-weight: 700;
-color: var(–accent);
-display: block;
+font-size: 1.35rem; font-weight: 700;
+color: var(–accent); display: block;
+transition: color 1.5s;
 }
-.hero-fact-label {
-font-size: 0.7rem;
-color: var(–muted);
-display: block;
-margin-top: 2px;
+.hero-datum-l {
+font-size: 0.65rem;
+color: var(–muted); display: block; margin-top: 2px;
 }
 
 /* ── QUIZ ── */
 #quiz-section {
 display: none;
-padding: 80px 20px 100px;
-max-width: 800px;
-margin: 0 auto;
+max-width: 780px; margin: 0 auto;
+padding: 80px 20px 110px;
 }
-
-.quiz-header-bar {
-display: flex; align-items: center; justify-content: space-between;
-margin-bottom: 48px;
-padding-bottom: 20px;
+.quiz-top {
+display: flex; justify-content: space-between; align-items: center;
+padding-bottom: 20px; margin-bottom: 44px;
 border-bottom: 1px solid var(–border);
 }
-.quiz-title {
+.quiz-top-title {
 font-family: var(–mono);
-font-size: 0.6rem;
-letter-spacing: 0.3em;
-color: var(–muted);
-text-transform: uppercase;
+font-size: 0.55rem; letter-spacing: 0.3em;
+color: var(–muted); text-transform: uppercase;
 }
-.quiz-counter {
+.quiz-top-counter {
 font-family: var(–mono);
-font-size: 0.6rem;
-letter-spacing: 0.1em;
-color: var(–muted);
+font-size: 0.55rem; color: var(–muted);
 }
 
-.q-card {
+.qcard {
 background: var(–surface);
 border: 1px solid var(–border);
 border-radius: 2px;
-padding: 36px 40px;
-margin-bottom: 20px;
-opacity: 0;
-transform: translateY(24px);
-transition: opacity 0.5s var(–ease), transform 0.5s var(–ease);
+padding: 34px 38px;
+margin-bottom: 18px;
+opacity: 0; transform: translateY(22px);
+transition: opacity 0.5s var(–ease), transform 0.5s var(–ease), border-color 0.4s;
 position: relative;
 }
-.q-card.visible { opacity: 1; transform: translateY(0); }
-.q-card::after {
+.qcard::before {
 content: ‘’;
 position: absolute; left: 0; top: 0; bottom: 0;
-width: 2px;
-background: var(–border2);
-transition: background 0.4s;
+width: 2px; background: var(–border2);
+transition: background 0.5s, box-shadow 0.5s;
 }
-.q-card.answered::after { background: var(–accent); }
+.qcard.answered::before { background: var(–accent); box-shadow: 0 0 8px var(–accent-glow); }
+.qcard.visible { opacity: 1; transform: translateY(0); }
 
-.q-meta {
-display: flex; align-items: center; gap: 10px;
-margin-bottom: 18px;
+.qmeta { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.qnum { font-family: var(–mono); font-size: 0.55rem; color: var(–muted); letter-spacing: 0.1em; }
+.qdot { color: var(–border2); }
+.qcat {
+font-family: var(–mono); font-size: 0.55rem;
+letter-spacing: 0.18em; color: var(–accent);
+text-transform: uppercase; transition: color 1.5s;
 }
-.q-num {
-font-family: var(–mono);
-font-size: 0.6rem;
-color: var(–muted);
-letter-spacing: 0.1em;
-}
-.q-sep { color: var(–border2); font-size: 0.6rem; }
-.q-cat {
-font-family: var(–mono);
-font-size: 0.6rem;
-letter-spacing: 0.15em;
-color: var(–accent);
-text-transform: uppercase;
-transition: color 0.6s;
-}
-.q-src-tag {
+.qsrc {
 margin-left: auto;
-font-family: var(–mono);
-font-size: 0.5rem;
+font-family: var(–mono); font-size: 0.48rem;
 letter-spacing: 0.1em;
-color: rgba(74,222,128,0.4);
-border: 1px solid rgba(74,222,128,0.15);
-padding: 2px 7px;
-border-radius: 2px;
-cursor: help;
+color: rgba(56,189,248,0.35);
+border: 1px solid rgba(56,189,248,0.12);
+padding: 2px 7px; border-radius: 2px; cursor: help;
+transition: color 1.5s, border-color 1.5s;
 }
+.qtitle { font-size: 1.1rem; font-weight: 700; line-height: 1.45; margin-bottom: 7px; }
+.qdesc { font-size: 0.78rem; color: var(–muted2); line-height: 1.85; margin-bottom: 26px; font-weight: 300; }
 
-.q-title {
-font-size: 1.15rem;
-font-weight: 700;
-line-height: 1.45;
-margin-bottom: 8px;
-}
-.q-desc {
-font-size: 0.8rem;
-color: var(–muted2);
-line-height: 1.8;
-margin-bottom: 28px;
-font-weight: 300;
-}
-
-.opts {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 10px;
-}
-
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .opt {
-background: var(–surface2);
+background: var(–surface);
 border: 1px solid var(–border);
-border-radius: 2px;
-padding: 18px;
-cursor: pointer;
-text-align: left;
+border-radius: 2px; padding: 16px;
+cursor: pointer; text-align: left;
 transition: border-color 0.2s, background 0.2s, transform 0.15s;
 position: relative;
 }
-.opt:hover {
-border-color: #333;
-background: #191919;
-transform: translateY(-1px);
-}
+.opt:hover { border-color: var(–border2); background: var(–surface2); transform: translateY(-1px); }
 .opt.selected {
 border-color: var(–accent);
-background: rgba(74,222,128,0.04);
+background: var(–accent-glow);
+transform: translateY(-1px);
 }
-.opt.selected { transform: translateY(-1px); }
-
 .opt-badge {
-position: absolute; top: 10px; right: 10px;
-font-family: var(–mono);
-font-size: 0.5rem;
-letter-spacing: 0.1em;
-padding: 2px 6px;
-border-radius: 2px;
-text-transform: uppercase;
+position: absolute; top: 9px; right: 9px;
+font-family: var(–mono); font-size: 0.48rem; letter-spacing: 0.1em;
+padding: 2px 6px; border-radius: 2px; text-transform: uppercase;
 }
-.badge-low { background: rgba(74,222,128,0.1); color: var(–green); }
-.badge-mid { background: rgba(250,204,21,0.1); color: var(–yellow); }
-.badge-high { background: rgba(248,113,113,0.1); color: var(–red); }
-
-.opt-icon { font-size: 1.3rem; display: block; margin-bottom: 10px; }
-.opt-label { font-size: 0.85rem; font-weight: 700; display: block; line-height: 1.3; }
-.opt-kg {
-font-family: var(–mono);
-font-size: 0.75rem;
-margin-top: 8px;
-display: block;
-color: var(–muted2);
-transition: color 0.2s;
-}
+.bl { background: rgba(74,222,128,0.1); color: #4ade80; }
+.bm { background: rgba(250,204,21,0.1); color: #facc15; }
+.bh { background: rgba(248,113,113,0.1); color: #f87171; }
+.opt-ico { font-size: 1.2rem; display: block; margin-bottom: 9px; }
+.opt-lbl { font-size: 0.82rem; font-weight: 700; display: block; line-height: 1.3; }
+.opt-kg { font-family: var(–mono); font-size: 0.68rem; margin-top: 7px; display: block; color: var(–muted2); transition: color 0.2s; }
 .opt.selected .opt-kg { color: var(–accent); }
-.opt-src-small {
-font-family: var(–mono);
-font-size: 0.5rem;
-color: #444;
-margin-top: 4px;
-display: block;
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
+.opt-src-s { font-family: var(–mono); font-size: 0.48rem; color: rgba(255,255,255,0.18); margin-top: 4px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── MOBILE BOTTOM BAR ── */
-.mobile-bar {
+/* ── MOBILE BAR ── */
+.mbar {
 display: none;
-position: fixed;
-bottom: 0; left: 0; right: 0;
-z-index: 200;
-background: rgba(10,10,10,0.96);
+position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+background: rgba(6,13,20,0.97);
 backdrop-filter: blur(16px);
 border-top: 1px solid var(–border);
-padding: 12px 24px 16px;
+padding: 10px 24px 14px;
 }
-.mobile-bar-inner {
-display: flex; align-items: center; justify-content: space-between;
-margin-bottom: 10px;
-}
-.mobile-bar-kg {
-font-family: var(–mono);
-font-size: 1.1rem;
-font-weight: 700;
-color: var(–accent);
-transition: color 0.5s;
-}
-.mobile-bar-progress {
-font-family: var(–mono);
-font-size: 0.65rem;
-color: var(–muted);
-}
-.mobile-bar-track {
-height: 2px;
-background: var(–border);
-border-radius: 1px;
-overflow: hidden;
-}
-.mobile-bar-fill {
-height: 100%;
-background: var(–accent);
-width: 0%;
-transition: width 0.5s var(–ease), background 0.5s;
-border-radius: 1px;
-}
+.mbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.mbar-kg { font-family: var(–mono); font-size: 1.05rem; font-weight: 700; color: var(–accent); transition: color 1.5s; }
+.mbar-prog { font-family: var(–mono); font-size: 0.6rem; color: var(–muted); }
+.mbar-track { height: 1px; background: var(–border); }
+.mbar-fill { height: 100%; background: var(–accent); width: 0%; transition: width 0.5s var(–ease), background 1.5s; }
 
 /* ── RESULT ── */
-#result-section {
-display: none;
-padding: 80px 20px 80px;
-max-width: 860px;
-margin: 0 auto;
-}
+#result-section { display: none; max-width: 900px; margin: 0 auto; padding: 80px 20px 80px; }
 
 /* Score block */
-.score-block {
-padding-bottom: 48px;
-margin-bottom: 48px;
-border-bottom: 1px solid var(–border);
-}
+.score-block { padding-bottom: 52px; margin-bottom: 52px; border-bottom: 1px solid var(–border); }
+.score-eyebrow { font-family: var(–mono); font-size: 0.55rem; letter-spacing: 0.3em; color: var(–muted); text-transform: uppercase; margin-bottom: 20px; }
+.score-row { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 18px; }
+.score-big { font-family: var(–mono); font-size: clamp(5rem, 15vw, 10rem); font-weight: 700; line-height: 1; color: var(–accent); transition: color 1.5s; }
+.score-unit-col { padding-bottom: 10px; }
+.score-unit { font-family: var(–mono); font-size: 0.8rem; color: var(–muted); display: block; }
+.score-sub { font-family: var(–mono); font-size: 0.5rem; color: var(–muted); letter-spacing: 0.1em; margin-top: 3px; display: block; }
+.score-verdict { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
+.score-desc { font-size: 0.82rem; color: var(–muted2); line-height: 1.9; max-width: 600px; font-weight: 300; }
 
-.score-eyebrow {
-font-family: var(–mono);
-font-size: 0.6rem;
-letter-spacing: 0.3em;
-color: var(–muted);
-text-transform: uppercase;
-margin-bottom: 20px;
-}
-
-.score-num-row {
-display: flex; align-items: flex-end; gap: 12px; margin-bottom: 16px;
-}
-.score-big {
-font-family: var(–mono);
-font-size: clamp(4.5rem, 14vw, 10rem);
-font-weight: 700;
-line-height: 1;
-color: var(–accent);
-transition: color 0.8s;
-}
-.score-unit-col {
-display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px;
-}
-.score-unit {
-font-family: var(–mono);
-font-size: 0.8rem;
-color: var(–muted);
-}
-.score-label {
-font-family: var(–mono);
-font-size: 0.55rem;
-color: var(–muted);
-letter-spacing: 0.1em;
-margin-top: 2px;
-}
-
-.score-verdict {
-font-size: 1.3rem;
-font-weight: 700;
-margin-bottom: 8px;
-}
-.score-desc {
-font-size: 0.85rem;
-color: var(–muted2);
-line-height: 1.9;
-max-width: 600px;
-font-weight: 300;
-}
-
-/* Tangible equiv */
-.equiv-row {
-display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px;
-}
+.equiv-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
 .equiv-chip {
 background: var(–surface);
 border: 1px solid var(–border);
-border-radius: 2px;
-padding: 10px 16px;
+border-radius: 2px; padding: 9px 14px;
 display: flex; align-items: center; gap: 10px;
 }
-.equiv-icon { font-size: 1.1rem; }
-.equiv-text {
-font-family: var(–mono);
-font-size: 0.65rem;
-color: var(–muted2);
-line-height: 1.4;
-}
-.equiv-text strong { color: var(–text); }
+.equiv-chip-ico { font-size: 1rem; }
+.equiv-chip-txt { font-family: var(–mono); font-size: 0.6rem; color: var(–muted2); line-height: 1.4; }
+.equiv-chip-txt strong { color: var(–text); }
 
 /* Section label */
-.sec-label {
+.sec-lbl {
+font-family: var(–mono); font-size: 0.52rem;
+letter-spacing: 0.28em; color: var(–muted);
+text-transform: uppercase; margin-bottom: 22px;
+display: flex; align-items: center; gap: 14px;
+}
+.sec-lbl::after { content: ‘’; flex: 1; height: 1px; background: var(–border); }
+
+.rblock { margin-bottom: 56px; }
+
+/* ── NEWSPAPER ── */
+.newspaper {
+border: 1px solid var(–border2);
+border-radius: 2px;
+overflow: hidden;
+background: var(–surface);
+}
+
+.np-masthead {
+padding: 20px 28px 16px;
+border-bottom: 2px solid var(–border2);
+text-align: center;
+position: relative;
+}
+.np-name {
 font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.25em;
-color: var(–muted);
-text-transform: uppercase;
-margin-bottom: 20px;
-display: flex; align-items: center; gap: 12px;
+font-size: clamp(1.4rem, 4vw, 2.2rem);
+font-weight: 700;
+letter-spacing: 0.12em;
+color: var(–text);
+display: block;
+line-height: 1;
 }
-.sec-label::after {
-content: ‘’;
-flex: 1;
-height: 1px;
-background: var(–border);
+.np-meta-row {
+display: flex; justify-content: space-between; align-items: center;
+margin-top: 10px; padding-top: 10px;
+border-top: 1px solid var(–border);
+font-family: var(–mono); font-size: 0.55rem;
+color: var(–muted); letter-spacing: 0.08em;
+}
+.np-tagline {
+display: block; margin-top: 4px;
+font-family: var(–mono); font-size: 0.52rem;
+color: var(–accent); letter-spacing: 0.1em;
+transition: color 1.5s;
 }
 
-.result-block {
-margin-bottom: 52px;
+.np-columns {
+display: grid; grid-template-columns: 1fr 1px 1fr;
 }
+.np-divider { background: var(–border2); }
 
-/* Benchmark comparison */
-.bench-list { display: flex; flex-direction: column; gap: 0; }
+.np-col { padding: 28px; }
+.np-col-header {
+font-family: var(–mono); font-size: 0.52rem;
+letter-spacing: 0.2em; text-transform: uppercase;
+padding: 6px 12px; border-radius: 2px;
+display: inline-block; margin-bottom: 20px;
+font-weight: 700;
+}
+.np-col-header.change { background: rgba(74,222,128,0.1); color: #4ade80; }
+.np-col-header.continue { background: rgba(248,113,113,0.1); color: #f87171; }
 
+.np-headline {
+font-size: 1.05rem; font-weight: 900;
+line-height: 1.35; margin-bottom: 8px;
+letter-spacing: -0.01em;
+}
+.np-col.left .np-headline { color: #e8e6e0; }
+.np-col.right .np-headline { color: #fca5a5; }
+
+.np-subhead {
+font-size: 0.75rem; color: var(–muted2);
+font-weight: 400; line-height: 1.6;
+margin-bottom: 14px;
+font-style: italic;
+}
+.np-byline {
+font-family: var(–mono); font-size: 0.52rem;
+color: var(–muted); letter-spacing: 0.05em;
+margin-bottom: 12px; padding-bottom: 8px;
+border-bottom: 1px solid var(–border);
+}
+.np-body {
+font-size: 0.78rem; color: var(–muted2);
+line-height: 1.85; font-weight: 300;
+}
+.np-body span.dateline { color: var(–text); font-weight: 700; }
+
+.np-stats {
+margin-top: 18px; padding-top: 14px;
+border-top: 1px solid var(–border);
+display: flex; flex-direction: column; gap: 8px;
+}
+.np-stat-row {
+display: flex; justify-content: space-between; align-items: center;
+}
+.np-stat-lbl { font-family: var(–mono); font-size: 0.55rem; color: var(–muted); }
+.np-stat-val { font-family: var(–mono); font-size: 0.7rem; font-weight: 700; }
+.np-col.left .np-stat-val { color: #4ade80; }
+.np-col.right .np-stat-val { color: #f87171; }
+
+/* ── BENCHMARK ── */
+.bench-list { display: flex; flex-direction: column; }
 .bench-row {
-display: grid;
-grid-template-columns: 130px 1fr 80px;
-align-items: center;
-gap: 16px;
-padding: 16px 0;
+display: grid; grid-template-columns: 120px 1fr 72px;
+align-items: center; gap: 14px;
+padding: 14px 0;
 border-bottom: 1px solid var(–border);
 }
 .bench-row:first-child { border-top: 1px solid var(–border); }
+.bench-lbl { font-family: var(–mono); font-size: 0.62rem; color: var(–text); display: block; margin-bottom: 3px; }
+.bench-meaning { font-size: 0.68rem; color: var(–muted); line-height: 1.5; font-weight: 300; }
+.bench-bar-wrap { height: 5px; background: var(–surface2); border-radius: 1px; }
+.bench-bar-fill { height: 100%; border-radius: 1px; width: 0%; transition: width 1.3s var(–ease); }
+.bench-val { font-family: var(–mono); font-size: 0.65rem; color: var(–muted2); text-align: right; }
+.bench-val strong { color: var(–text); display: block; font-size: 0.75rem; }
 
-.bench-left {}
-.bench-label {
-font-family: var(–mono);
-font-size: 0.65rem;
-color: var(–text);
-display: block;
-margin-bottom: 3px;
-}
-.bench-meaning {
-font-size: 0.7rem;
-color: var(–muted);
-line-height: 1.5;
-font-weight: 300;
-}
-
-.bench-bar-wrap {
-height: 6px;
-background: var(–surface2);
-border-radius: 1px;
-overflow: visible;
-position: relative;
-}
-.bench-bar-fill {
-height: 100%;
-border-radius: 1px;
-width: 0%;
-transition: width 1.2s var(–ease);
-position: relative;
-}
-.bench-bar-fill.you { background: var(–accent); }
-.bench-bar-fill.tw { background: var(–yellow); }
-.bench-bar-fill.global { background: var(–orange); }
-.bench-bar-fill.paris { background: var(–blue); }
-
-.bench-val {
-font-family: var(–mono);
-font-size: 0.7rem;
-text-align: right;
-color: var(–muted2);
-}
-.bench-val strong { color: var(–text); display: block; font-size: 0.8rem; }
-
-/* Breakdown */
-.breakdown-grid {
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-gap: 10px;
-}
-.breakdown-item {
-background: var(–surface);
-border: 1px solid var(–border);
-padding: 16px;
-border-radius: 2px;
-position: relative;
-overflow: hidden;
-}
-.breakdown-item::after {
-content: ‘’;
-position: absolute; bottom: 0; left: 0; right: 0;
-height: 2px;
-background: var(–accent);
-transform: scaleX(0);
-transition: transform 0.6s var(–ease);
-transform-origin: left;
-}
-.breakdown-item.animated::after { transform: scaleX(1); }
-.breakdown-icon { font-size: 1.2rem; margin-bottom: 8px; display: block; }
-.breakdown-cat {
-font-family: var(–mono);
-font-size: 0.55rem;
-color: var(–muted);
-letter-spacing: 0.1em;
-text-transform: uppercase;
-margin-bottom: 4px;
-}
-.breakdown-kg {
-font-family: var(–mono);
-font-size: 1rem;
-font-weight: 700;
-color: var(–text);
-}
-
-/* Temperature scenarios */
-.temp-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 12px;
-}
-.temp-card {
+/* ── TEMP SCENARIOS AS NEWSPAPER EDITIONS ── */
+.temp-editions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.te {
 border: 1px solid var(–border);
 border-radius: 2px;
-padding: 24px 20px;
-position: relative;
 overflow: hidden;
-transition: border-color 0.4s;
+transition: border-color 0.4s, box-shadow 0.4s;
 }
-.temp-card.active {
-border-color: currentColor;
+.te.active-temp { box-shadow: 0 0 20px var(–accent-glow); }
+.te-masthead {
+padding: 12px 16px;
+border-bottom: 1px solid var(–border);
+text-align: center;
 }
-.temp-card.t15 { color: var(–blue); }
-.temp-card.t20 { color: var(–yellow); }
-.temp-card.t30 { color: var(–red); }
-
-.temp-card-bg {
-position: absolute; inset: 0;
-opacity: 0.04;
+.te-name { font-family: var(–mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; }
+.te-date { font-family: var(–mono); font-size: 0.48rem; color: var(–muted); margin-top: 3px; }
+.te-body { padding: 16px; }
+.te-temp-badge {
+font-family: var(–mono); font-size: 0.5rem; letter-spacing: 0.15em;
+padding: 3px 8px; border-radius: 2px;
+display: inline-block; margin-bottom: 12px; text-transform: uppercase;
+}
+.te-headline { font-size: 0.82rem; font-weight: 700; line-height: 1.4; margin-bottom: 10px; }
+.te-effects { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.te-effects li { font-size: 0.68rem; color: var(–muted2); line-height: 1.5; display: flex; gap: 6px; font-weight: 300; }
+.te-effects li::before { content: ‘·’; flex-shrink: 0; }
+.te-your-flag {
+margin-top: 12px; padding-top: 10px;
+border-top: 1px solid var(–border);
+font-family: var(–mono); font-size: 0.5rem;
+letter-spacing: 0.1em; opacity: 0;
 transition: opacity 0.4s;
 }
-.temp-card.active .temp-card-bg { opacity: 0.08; }
-.t15 .temp-card-bg { background: var(–blue); }
-.t20 .temp-card-bg { background: var(–yellow); }
-.t30 .temp-card-bg { background: var(–red); }
+.te.active-temp .te-your-flag { opacity: 1; }
 
-.temp-badge {
-font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.15em;
-text-transform: uppercase;
-padding: 3px 8px;
-border-radius: 2px;
-border: 1px solid currentColor;
-display: inline-block;
-margin-bottom: 16px;
-opacity: 0.8;
-}
-.temp-card.active .temp-badge { opacity: 1; }
+/* 1.5°C */
+.te.t15 .te-name { color: var(–cool); }
+.te.t15 .te-temp-badge { background: rgba(56,189,248,0.1); color: var(–cool); }
+.te.t15 .te-headline { color: var(–text); }
+.te.t15 .te-effects li::before { color: var(–cool); }
+.te.t15 .te-your-flag { color: var(–cool); }
+.te.t15.active-temp { border-color: var(–cool); }
 
-.temp-degree {
-font-family: var(–mono);
-font-size: 2.8rem;
-font-weight: 700;
-line-height: 1;
-margin-bottom: 16px;
-opacity: 0.9;
-}
-.temp-card.active .temp-degree { opacity: 1; }
+/* 2.0°C */
+.te.t20 .te-name { color: var(–mild); }
+.te.t20 .te-temp-badge { background: rgba(250,204,21,0.1); color: var(–mild); }
+.te.t20 .te-headline { color: #fde68a; }
+.te.t20 .te-effects li::before { color: var(–mild); }
+.te.t20 .te-your-flag { color: var(–mild); }
+.te.t20.active-temp { border-color: var(–mild); }
 
-.temp-effects {
-list-style: none;
-display: flex; flex-direction: column; gap: 6px;
-}
-.temp-effects li {
-font-size: 0.75rem;
-color: var(–muted2);
-line-height: 1.5;
-display: flex; gap: 8px;
-font-weight: 300;
-}
-.temp-effects li::before {
-content: ‘·’;
-color: currentColor;
-flex-shrink: 0;
-}
-.temp-card.active .temp-effects li { color: var(–muted2); }
+/* 3°C+ */
+.te.t30 .te-name { color: var(–hot); }
+.te.t30 .te-temp-badge { background: rgba(248,113,113,0.1); color: var(–hot); }
+.te.t30 .te-headline { color: #fca5a5; }
+.te.t30 .te-effects li::before { color: var(–hot); }
+.te.t30 .te-your-flag { color: var(–hot); }
+.te.t30.active-temp { border-color: var(–hot); }
 
-.temp-your-tag {
-margin-top: 16px;
-font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.1em;
-color: currentColor;
-border-top: 1px solid currentColor;
-padding-top: 10px;
-opacity: 0;
-transition: opacity 0.4s;
-}
-.temp-card.active .temp-your-tag { opacity: 0.8; }
-
-/* Recommendations */
-.rec-list { display: flex; flex-direction: column; gap: 16px; }
-
+/* ── RECOMMENDATIONS ── */
+.rec-list { display: flex; flex-direction: column; gap: 14px; }
 .rec-card {
 background: var(–surface);
 border: 1px solid var(–border);
-border-radius: 2px;
-padding: 24px 28px;
-position: relative;
-overflow: hidden;
-opacity: 0;
-transform: translateY(12px);
+border-radius: 2px; padding: 24px 26px;
+opacity: 0; transform: translateY(10px);
 transition: opacity 0.5s var(–ease), transform 0.5s var(–ease);
+position: relative; overflow: hidden;
 }
 .rec-card.visible { opacity: 1; transform: translateY(0); }
-
-.rec-rank {
-position: absolute; top: 0; right: 0;
-font-family: var(–mono);
-font-size: 5rem;
-font-weight: 700;
-color: rgba(255,255,255,0.03);
-line-height: 1;
-}
-
-.rec-top {
-display: flex; align-items: flex-start; justify-content: space-between;
-margin-bottom: 16px;
-}
-.rec-source {
-display: flex; flex-direction: column; gap: 4px;
-}
-.rec-cat-tag {
-font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.15em;
-color: var(–red);
-text-transform: uppercase;
-}
-.rec-what {
-font-size: 0.9rem;
-font-weight: 700;
-line-height: 1.3;
-}
-.rec-current-kg {
-font-family: var(–mono);
-font-size: 1.4rem;
-font-weight: 700;
-color: var(–red);
-text-align: right;
-flex-shrink: 0;
-}
-.rec-current-kg span {
-display: block;
-font-size: 0.55rem;
-color: var(–muted);
-letter-spacing: 0.1em;
-text-align: right;
-margin-top: 2px;
-}
-
-.rec-arrow {
-display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-font-size: 0.8rem; color: var(–muted2); font-weight: 300;
-}
-.rec-arrow-icon { font-size: 0.75rem; color: var(–accent); }
-
-.rec-savings {
-display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
-}
-.rec-save-chip {
+.rec-ghost { position: absolute; top: 0; right: 0; font-family: var(–mono); font-size: 5.5rem; font-weight: 700; color: rgba(255,255,255,0.02); line-height: 1; }
+.rec-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.rec-cat { font-family: var(–mono); font-size: 0.5rem; letter-spacing: 0.15em; color: var(–hot); text-transform: uppercase; margin-bottom: 4px; }
+.rec-what { font-size: 0.88rem; font-weight: 700; line-height: 1.3; }
+.rec-kg { font-family: var(–mono); font-size: 1.3rem; font-weight: 700; color: var(–hot); flex-shrink: 0; text-align: right; }
+.rec-kg span { display: block; font-size: 0.48rem; color: var(–muted); letter-spacing: 0.1em; margin-top: 2px; text-align: right; }
+.rec-arrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.78rem; color: var(–muted2); font-weight: 300; }
+.rec-arr-icon { font-size: 0.7rem; color: var(–green); }
+.rec-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.rec-chip {
 background: rgba(74,222,128,0.06);
-border: 1px solid rgba(74,222,128,0.15);
-border-radius: 2px;
-padding: 6px 12px;
-font-family: var(–mono);
-font-size: 0.6rem;
-color: var(–green);
-display: flex; flex-direction: column; gap: 1px;
+border: 1px solid rgba(74,222,128,0.12);
+border-radius: 2px; padding: 5px 10px;
+font-family: var(–mono); font-size: 0.58rem; color: #4ade80;
+display: flex; flex-direction: column;
 }
-.rec-save-chip span { color: var(–muted); font-size: 0.5rem; }
+.rec-chip span { color: var(–muted); font-size: 0.48rem; margin-top: 1px; }
+.rec-impacts {
+display: flex; gap: 18px; flex-wrap: wrap;
+padding-top: 12px; border-top: 1px solid var(–border);
+}
+.rec-impact { font-size: 0.7rem; color: var(–muted2); display: flex; gap: 5px; align-items: center; font-weight: 300; }
+.rec-impact em { font-style: normal; color: var(–text); font-weight: 700; }
 
-.rec-impact-row {
-display: flex; gap: 20px; flex-wrap: wrap;
-padding-top: 14px;
-border-top: 1px solid var(–border);
-}
-.rec-impact-item {
-display: flex; align-items: center; gap: 6px;
-font-size: 0.72rem; color: var(–muted2); font-weight: 300;
-}
-.rec-impact-item em { font-style: normal; color: var(–text); font-weight: 700; }
-
-/* One action */
-.one-action-box {
+/* ── ONE ACTION ── */
+.one-action {
 background: var(–surface);
-border: 1px solid rgba(74,222,128,0.2);
-border-radius: 2px;
-padding: 32px;
-position: relative;
-overflow: hidden;
+border: 1px solid rgba(74,222,128,0.18);
+border-radius: 2px; padding: 28px 32px;
+position: relative; overflow: hidden;
 }
-.one-action-box::before {
-content: ‘’;
-position: absolute; top: 0; left: 0; right: 0;
-height: 2px;
-background: linear-gradient(90deg, var(–accent), transparent);
-}
-.oat-label {
-font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.2em;
-color: var(–accent);
-text-transform: uppercase;
-margin-bottom: 12px;
-}
-.oat-title {
-font-size: 1.1rem;
-font-weight: 700;
-margin-bottom: 8px;
-line-height: 1.4;
-}
-.oat-sub {
-font-size: 0.8rem;
-color: var(–muted2);
-font-weight: 300;
-line-height: 1.8;
-}
-.oat-save {
-margin-top: 16px;
-font-family: var(–mono);
-font-size: 0.7rem;
-color: var(–green);
-display: flex; gap: 20px; flex-wrap: wrap;
-}
+.one-action::before { content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #4ade80, transparent); }
+.oa-label { font-family: var(–mono); font-size: 0.5rem; letter-spacing: 0.22em; color: #4ade80; text-transform: uppercase; margin-bottom: 10px; }
+.oa-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 7px; line-height: 1.4; }
+.oa-body { font-size: 0.78rem; color: var(–muted2); font-weight: 300; line-height: 1.85; }
+.oa-save { margin-top: 14px; font-family: var(–mono); font-size: 0.65rem; color: #4ade80; display: flex; gap: 18px; flex-wrap: wrap; }
 
 /* Data source */
-.ds-box {
-background: var(–surface);
-border: 1px solid var(–border);
-border-left: 2px solid rgba(74,222,128,0.3);
-padding: 20px 24px;
-border-radius: 2px;
-margin-bottom: 40px;
-}
-.ds-title {
-font-family: var(–mono);
-font-size: 0.55rem;
-letter-spacing: 0.2em;
-color: var(–accent);
-text-transform: uppercase;
-margin-bottom: 12px;
-}
+.ds-box { background: var(–surface); border: 1px solid var(–border); border-left: 2px solid rgba(56,189,248,0.2); padding: 18px 22px; border-radius: 2px; margin-bottom: 36px; }
+.ds-title { font-family: var(–mono); font-size: 0.5rem; letter-spacing: 0.22em; color: var(–accent); text-transform: uppercase; margin-bottom: 10px; transition: color 1.5s; }
 .ds-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.ds-list li {
-font-family: var(–mono);
-font-size: 0.6rem;
-color: var(–muted);
-display: flex; gap: 8px; align-items: flex-start;
-line-height: 1.5;
-}
-.ds-list li::before { content: ‘→’; color: rgba(74,222,128,0.4); flex-shrink: 0; }
-.ds-list a { color: rgba(74,222,128,0.6); text-decoration: none; }
+.ds-list li { font-family: var(–mono); font-size: 0.58rem; color: var(–muted); display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.ds-list li::before { content: ‘→’; color: rgba(56,189,248,0.3); flex-shrink: 0; transition: color 1.5s; }
+.ds-list a { color: rgba(56,189,248,0.5); text-decoration: none; }
 .ds-list a:hover { color: var(–accent); }
 
-/* Restart */
-.restart-btn {
-font-family: var(–mono);
-font-size: 0.65rem;
-letter-spacing: 0.2em;
-text-transform: uppercase;
-background: transparent;
-color: var(–muted);
-border: 1px solid var(–border);
-padding: 12px 28px;
-cursor: pointer;
-transition: 0.2s;
-border-radius: 2px;
-}
-.restart-btn:hover { color: var(–text); border-color: #444; }
+.restart-btn { font-family: var(–mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; background: transparent; color: var(–muted); border: 1px solid var(–border); padding: 11px 26px; cursor: pointer; transition: 0.2s; border-radius: 2px; }
+.restart-btn:hover { color: var(–text); border-color: var(–border2); }
 
 /* ── ANIMATIONS ── */
-@keyframes riseIn {
-from { opacity: 0; transform: translateY(16px); }
-to { opacity: 1; transform: translateY(0); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── ENDING ── */
+.ending {
+margin-top: 72px;
+text-align: center;
+padding-bottom: 40px;
 }
-@keyframes countUp {
-from { opacity: 0; }
-to { opacity: 1; }
+.ending-echo {
+font-size: clamp(3rem, 10vw, 6rem);
+font-weight: 900;
+letter-spacing: -0.04em;
+line-height: 0.88;
+color: transparent;
+-webkit-text-stroke: 1px rgba(237,233,227,0.07);
+margin-bottom: 36px;
+user-select: none;
 }
+.ending-echo em {
+font-family: var(–serif);
+font-style: italic;
+font-size: 0.88em;
+display: block;
+}
+.ending-rule {
+width: 48px; height: 1px;
+background: var(–border2);
+margin: 0 auto 28px;
+}
+.ending-colophon {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 6px;
+}
+.ending-logo {
+font-family: var(–mono);
+font-size: 0.6rem;
+letter-spacing: 0.3em;
+color: var(–accent);
+text-transform: uppercase;
+transition: color 1.5s;
+}
+.ending-score {
+font-family: var(–mono);
+font-size: 0.65rem;
+color: var(–muted2);
+letter-spacing: 0.08em;
+}
+.ending-date {
+font-family: var(–mono);
+font-size: 0.55rem;
+color: var(–muted);
+letter-spacing: 0.12em;
+}
+
+/* ── WARMTH: TYPOGRAPHY ── */
+/* Spectral serif for emotional/display text, mono stays for data */
+
+.hero-sub {
+font-family: var(–serif);
+font-size: 1.05rem;
+font-style: italic;
+font-weight: 300;
+letter-spacing: 0.01em;
+}
+
+.score-verdict {
+font-family: var(–serif);
+font-size: 1.45rem;
+font-weight: 600;
+letter-spacing: -0.01em;
+margin-bottom: 10px;
+}
+
+.score-desc {
+font-family: var(–serif);
+font-size: 0.95rem;
+font-weight: 300;
+font-style: italic;
+color: var(–muted2);
+line-height: 2;
+max-width: 560px;
+}
+
+.np-headline {
+font-family: var(–serif);
+font-size: 1.1rem;
+font-weight: 600;
+line-height: 1.45;
+margin-bottom: 8px;
+}
+
+.np-subhead {
+font-family: var(–serif);
+font-size: 0.82rem;
+font-style: italic;
+color: var(–muted2);
+line-height: 1.7;
+margin-bottom: 14px;
+}
+
+.np-body {
+font-family: var(–serif);
+font-size: 0.82rem;
+font-weight: 300;
+color: var(–muted2);
+line-height: 2;
+}
+
+.oa-title {
+font-family: var(–serif);
+font-size: 1.15rem;
+font-weight: 400;
+font-style: italic;
+line-height: 1.65;
+margin-bottom: 8px;
+}
+
+.te-headline {
+font-family: var(–serif);
+font-size: 0.88rem;
+font-style: italic;
+line-height: 1.55;
+margin-bottom: 10px;
+}
+
+.qdesc {
+font-family: var(–serif);
+font-size: 0.82rem;
+font-style: italic;
+font-weight: 300;
+color: var(–muted2);
+line-height: 1.95;
+margin-bottom: 26px;
+}
+
+/* ── WARMTH: SPACING ── */
+/* More breathing room throughout */
+
+.qcard { padding: 44px 48px; margin-bottom: 24px; }
+.score-block { padding-bottom: 64px; margin-bottom: 64px; }
+.rblock { margin-bottom: 68px; }
+.np-col { padding: 36px 32px; }
+.one-action { padding: 36px 40px; }
+.rec-card { padding: 28px 32px; }
+
+/* ── WARMTH: BORDERS & SURFACES ── */
+/* Softer, warmer surfaces */
+
+.qcard, .rec-card, .one-action, .np-masthead,
+.breakdown-item, .te, .equiv-chip {
+border-radius: 4px;
+}
+
+.opt { border-radius: 4px; }
+
+/* Warm left-accent on answered cards */
+.qcard.answered::before {
+background: var(–accent);
+box-shadow: 0 0 12px var(–accent-glow);
+width: 3px;
+}
+
+/* ── PAGINATION ── */
+#result-section { padding-top: 100px; }
+
+.rpage { display: none; animation: pageIn 0.45s var(–ease) forwards; }
+.rpage.active { display: block; }
+@keyframes pageIn {
+from { opacity: 0; transform: translateY(18px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+.pnav {
+position: fixed; top: 52px; left: 0; right: 0; z-index: 90;
+background: rgba(6,13,20,0.92); backdrop-filter: blur(16px);
+border-bottom: 1px solid var(–border);
+padding: 10px 40px; display: none;
+align-items: center; justify-content: space-between;
+transition: background 2s ease;
+}
+.pnav.show { display: flex; }
+.pnav-dots { display: flex; gap: 8px; align-items: center; }
+.pdot {
+width: 6px; height: 6px; border-radius: 50%;
+background: var(–border2); cursor: pointer;
+transition: background 0.3s, transform 0.3s;
+}
+.pdot.active { background: var(–accent); transform: scale(1.4); }
+.pnav-label {
+font-family: var(–mono); font-size: 0.52rem;
+letter-spacing: 0.15em; color: var(–muted); text-transform: uppercase;
+}
+
+.page-nav-bar {
+display: flex; justify-content: space-between; align-items: center;
+margin-top: 40px; padding-top: 24px; border-top: 1px solid var(–border);
+}
+.pnext-btn, .pprev-btn {
+font-family: var(–mono); font-size: 0.65rem;
+letter-spacing: 0.2em; text-transform: uppercase;
+border: 1px solid var(–border2); border-radius: 2px;
+background: transparent; cursor: pointer; padding: 11px 24px; transition: 0.2s;
+}
+.pnext-btn {
+background: var(–accent); color: #020a10; border-color: var(–accent);
+clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+font-weight: 700; transition: transform 0.2s, box-shadow 0.2s, background 1.5s, border-color 1.5s;
+}
+.pnext-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(–accent-glow); }
+.pprev-btn { color: var(–muted); }
+.pprev-btn:hover { color: var(–text); border-color: var(–border2); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
-header { padding: 0 20px; }
-.header-right { gap: 16px; }
+header { padding: 0 18px; }
+.header-r { gap: 14px; }
 .opts { grid-template-columns: 1fr; }
-.q-card { padding: 24px 20px; }
-#quiz-section { padding: 72px 16px 100px; }
-#result-section { padding: 72px 16px 60px; }
-.hero-facts { gap: 24px; }
-.temp-grid { grid-template-columns: 1fr; }
-.bench-row { grid-template-columns: 100px 1fr 60px; gap: 10px; }
-.mobile-bar { display: block; }
-.score-big { font-size: clamp(3.5rem, 20vw, 6rem); }
+.qcard { padding: 22px 18px; }
+#quiz-section { padding: 70px 14px 100px; }
+#result-section { padding: 100px 14px 60px; }
+.mbar { display: block; }
+.np-columns { grid-template-columns: 1fr; }
+.np-divider { display: none; }
+.np-col { padding: 20px; border-bottom: 1px solid var(–border); }
+.np-col:last-child { border-bottom: none; }
+.temp-editions { grid-template-columns: 1fr; }
+.bench-row { grid-template-columns: 90px 1fr 60px; gap: 8px; }
+.hero-data { gap: 28px; }
+.score-big { font-size: clamp(4rem, 22vw, 7rem); }
+.pnav { padding: 8px 18px; }
+.page-nav-bar { margin-top: 28px; }
+.pnext-btn, .pprev-btn { padding: 10px 16px; font-size: 0.58rem; }
 }
 </style>
 
 </head>
 <body>
 
-<!-- HEADER -->
-
 <header>
-  <div class="logo" id="logo-text">◈ Carbon Life</div>
-  <div class="header-right">
-    <div class="hstat">
-      <span class="hstat-label">累積排放</span>
-      <span class="hstat-value" id="h-carbon">—</span>
-    </div>
-    <div class="hstat">
-      <span class="hstat-label">進度</span>
-      <span class="hstat-value" id="h-progress">0/9</span>
-    </div>
+  <div class="logo" id="logo">◈ Carbon Life</div>
+  <div class="header-r">
+    <div class="hstat"><span class="hstat-lbl">累積排放</span><span class="hstat-val" id="h-co2">—</span></div>
+    <div class="hstat"><span class="hstat-lbl">進度</span><span class="hstat-val" id="h-prog">0/9</span></div>
   </div>
-  <div class="header-progress">
-    <div class="header-progress-fill" id="progress-fill"></div>
-  </div>
+  <div class="hbar-wrap"><div class="hbar-fill" id="hbar"></div></div>
 </header>
 
-<!-- MOBILE BOTTOM BAR -->
-
-<div class="mobile-bar" id="mobile-bar">
-  <div class="mobile-bar-inner">
-    <span class="mobile-bar-kg" id="mb-carbon">0.00 kg CO₂e</span>
-    <span class="mobile-bar-progress" id="mb-progress">0 / 9 題</span>
+<div class="mbar" id="mbar">
+  <div class="mbar-row">
+    <span class="mbar-kg" id="mb-kg">0.00 kg CO₂e</span>
+    <span class="mbar-prog" id="mb-prog">0 / 9 題</span>
   </div>
-  <div class="mobile-bar-track">
-    <div class="mobile-bar-fill" id="mb-fill"></div>
-  </div>
+  <div class="mbar-track"><div class="mbar-fill" id="mb-fill"></div></div>
 </div>
 
-<!-- HERO -->
-
-<section class="hero" id="hero-section">
+<section class="hero" id="hero">
   <div class="hero-grid"></div>
+  <div class="hero-orb"></div>
   <div class="hero-eyebrow">24 Hour Carbon Simulator · 2025</div>
   <h1 class="hero-title">CARBON<br><em>LIFE</em></h1>
-  <p class="hero-sub">你的每一個日常選擇，都在為地球加溫或降溫。<br>追蹤你 24 小時的碳足跡，與全球數據對比，看見你對地球未來的影響。</p>
-  <button class="cta-btn" onclick="startQuiz()">開始模擬 →</button>
-  <div class="hero-facts">
-    <div class="hero-fact">
-      <span class="hero-fact-num">14 kg</span>
-      <span class="hero-fact-label">台灣人均每日</span>
-    </div>
-    <div class="hero-fact">
-      <span class="hero-fact-num">3 kg</span>
-      <span class="hero-fact-label">巴黎協定目標</span>
-    </div>
-    <div class="hero-fact">
-      <span class="hero-fact-num">9題</span>
-      <span class="hero-fact-label">日常選擇</span>
-    </div>
+  <p class="hero-sub">你只是一個普通人。<br>但你今天做的每個小選擇，<br>都在幫地球投票。</p>
+  <button class="start-btn" onclick="startQuiz()">我準備好了 →</button>
+  <div class="hero-data">
+    <div class="hero-datum"><span class="hero-datum-n">14 kg</span><span class="hero-datum-l">台灣人均每日</span></div>
+    <div class="hero-datum"><span class="hero-datum-n">3 kg</span><span class="hero-datum-l">巴黎協定目標</span></div>
+    <div class="hero-datum"><span class="hero-datum-n">2051</span><span class="hero-datum-l">你看到的未來年份</span></div>
   </div>
 </section>
 
-<!-- QUIZ -->
-
 <section id="quiz-section"></section>
-
-<!-- RESULT -->
 
 <section id="result-section">
 
-  <!-- SCORE -->
+  <!-- PAGE NAV -->
 
-  <div class="score-block">
-    <div class="score-eyebrow">你的 24H 碳足跡報告</div>
-    <div class="score-num-row">
-      <div class="score-big" id="r-score">0.00</div>
-      <div class="score-unit-col">
-        <span class="score-unit">kg CO₂e</span>
-        <span class="score-label">/ 日</span>
+  <div class="pnav" id="pnav">
+    <div class="pnav-dots" id="pnav-dots"></div>
+    <div class="pnav-label" id="pnav-label"></div>
+  </div>
+
+  <!-- PAGE 1: Score -->
+
+  <div class="rpage" id="rpage-1">
+    <div class="score-block">
+      <div class="score-eyebrow">你的 24H 碳足跡報告</div>
+      <div class="score-row">
+        <div class="score-big" id="r-score">0.00</div>
+        <div class="score-unit-col">
+          <span class="score-unit">kg CO₂e</span>
+          <span class="score-sub">/ 日</span>
+        </div>
       </div>
+      <div class="score-verdict" id="r-verdict"></div>
+      <div class="score-desc" id="r-desc"></div>
+      <div class="equiv-chips" id="equiv-chips"></div>
     </div>
-    <div class="score-verdict" id="r-verdict"></div>
-    <div class="score-desc" id="r-desc"></div>
-    <div class="equiv-row" id="equiv-row"></div>
+    <div class="page-nav-bar">
+      <span></span>
+      <button class="pnext-btn" onclick="goPage(2)">你寫出的未來 →</button>
+    </div>
   </div>
 
-  <!-- BENCHMARK -->
+  <!-- PAGE 2: Newspaper -->
 
-  <div class="result-block">
-    <div class="sec-label">與全球基準比較</div>
-    <div class="bench-list" id="bench-list"></div>
+  <div class="rpage" id="rpage-2">
+    <div class="rblock">
+      <div class="sec-lbl">你寫出的兩種未來</div>
+      <div class="newspaper" id="newspaper"></div>
+    </div>
+    <div class="page-nav-bar">
+      <button class="pprev-btn" onclick="goPage(1)">← 返回</button>
+      <button class="pnext-btn" onclick="goPage(3)">全球視角 →</button>
+    </div>
   </div>
 
-  <!-- BREAKDOWN -->
+  <!-- PAGE 3: Global context -->
 
-  <div class="result-block">
-    <div class="sec-label">排放來源分解</div>
-    <div class="breakdown-grid" id="breakdown-grid"></div>
+  <div class="rpage" id="rpage-3">
+    <div class="rblock">
+      <div class="sec-lbl">與全球基準比較</div>
+      <div class="bench-list" id="bench-list"></div>
+    </div>
+    <div class="rblock">
+      <div class="sec-lbl">如果全球都像你這樣生活</div>
+      <div class="temp-editions" id="temp-editions"></div>
+    </div>
+    <div class="page-nav-bar">
+      <button class="pprev-btn" onclick="goPage(2)">← 返回</button>
+      <button class="pnext-btn" onclick="goPage(4)">行動計畫 →</button>
+    </div>
   </div>
 
-  <!-- TEMPERATURE SCENARIOS -->
+  <!-- PAGE 4: Action plan -->
 
-  <div class="result-block">
-    <div class="sec-label">如果全球都像你這樣生活</div>
-    <div class="temp-grid" id="temp-grid"></div>
+  <div class="rpage" id="rpage-4">
+    <div class="rblock">
+      <div class="sec-lbl">你的個人減碳建議</div>
+      <div class="rec-list" id="rec-list"></div>
+    </div>
+    <div class="rblock">
+      <div class="sec-lbl">明天就做這一件事</div>
+      <div class="one-action" id="one-action"></div>
+    </div>
+    <div class="ds-box">
+      <div class="ds-title">數據引用來源 · Data Sources</div>
+      <ul class="ds-list">
+        <li>環境部「碳足跡排放係數資料庫」CFP_P_02（快照日期 2026-05）<a href="https://data.moenv.gov.tw/dataset/detail/CFP_P_02" target="_blank">↗ 開放資料平台</a></li>
+        <li>環境部「產品碳足跡資訊網」— 蔬食便當 1.0 kg、葷食便當均值 3.25 kg<a href="https://cfp.moenv.gov.tw" target="_blank">↗ 係數資料庫</a></li>
+        <li>經濟部能源署 112 年電力排碳係數：0.494 kgCO₂/度</li>
+        <li>交通部 111 年民眾日常使用運具狀況調查</li>
+        <li>桃園市政府環保局「低碳活動指引評核項目說明 PLUS 版 v2」</li>
+        <li>環境部氣候變遷署「溫室氣體排放係數管理表 6.0.4 版」</li>
+      </ul>
+    </div>
+    <div class="page-nav-bar">
+      <button class="pprev-btn" onclick="goPage(3)">← 返回</button>
+      <button class="restart-btn" onclick="location.reload()">↺ 重新模擬</button>
+    </div>
+
+```
+<div class="ending">
+  <div class="ending-echo">CARBON<br><em>LIFE</em></div>
+  <div class="ending-rule"></div>
+  <div class="ending-colophon">
+    <span class="ending-logo">◈ Carbon Life</span>
+    <span class="ending-score" id="ending-score"></span>
+    <span class="ending-date" id="ending-date"></span>
   </div>
+</div>
+```
 
-  <!-- AI RECOMMENDATIONS -->
-
-  <div class="result-block">
-    <div class="sec-label">你的個人減碳建議</div>
-    <div class="rec-list" id="rec-list"></div>
   </div>
-
-  <!-- ONE ACTION -->
-
-  <div class="result-block">
-    <div class="sec-label">明天就做一件事</div>
-    <div class="one-action-box" id="one-action-box"></div>
-  </div>
-
-  <!-- DATA SOURCES -->
-
-  <div class="ds-box">
-    <div class="ds-title">數據引用來源 · Data Sources</div>
-    <ul class="ds-list">
-      <li>環境部「碳足跡排放係數資料庫」CFP_P_02（快照日期 2026-05）<a href="https://data.moenv.gov.tw/dataset/detail/CFP_P_02" target="_blank">↗ 開放資料平台</a></li>
-      <li>環境部「產品碳足跡資訊網」— 蔬食便當 1.0 kg、葷食便當均值 3.25 kg<a href="https://cfp.moenv.gov.tw/WebPage/WebSites/CoefficientDB.aspx" target="_blank">↗ 係數資料庫</a></li>
-      <li>經濟部能源署 112 年電力排碳係數：0.494 kgCO₂/度</li>
-      <li>交通部 111 年民眾日常使用運具狀況調查 — 汽車 0.173、火車 0.06、捷運 0.04 kgCO₂e/人公里</li>
-      <li>桃園市政府環保局「低碳活動指引評核項目說明 PLUS 版 v2」</li>
-      <li>環境部氣候變遷署「溫室氣體排放係數管理表 6.0.4 版」</li>
-    </ul>
-  </div>
-
-<button class="restart-btn" onclick="location.reload()">↺ 重新模擬</button>
 
 </section>
 
 <script>
-/* ── DATA ── */
-const COEFF_SOURCES = {
-  transport: "交通部 111 年運具調查＋環保署綠色車輛指南",
-  food: "環境部碳足跡係數資料庫 CFP_P_02（桃園市低碳活動指引 v2）",
-  energy: "經濟部 112 年電力碳排係數 0.494 kgCO₂/度",
-  product: "環境部碳足跡係數資料庫 CFP_P_02",
-};
-
+/* ══════════════════════════════════════
+   DATA
+══════════════════════════════════════ */
 const questions = [
-  {
-    id: 1, category: "交通", icon: "🚗", sourceKey: "transport",
-    title: "早晨通勤：你的主要交通工具？",
-    desc: "交通排放佔台灣溫室氣體約 13%。同樣通勤 10 公里，不同工具的碳排差距可達 40 倍以上。",
-    options: [
-      { label: "步行 / 腳踏車", icon: "🚲", kg: 0.00, badge: "low", note: "0.00 kg CO₂e", src: "零化石燃料消耗", altLabel: null },
-      { label: "捷運 / 公車", icon: "🚇", kg: 0.40, badge: "low", note: "0.40 kg CO₂e", src: "捷運 0.04/人公里 × 10km", altLabel: null },
-      { label: "機車（燃油）", icon: "🛵", kg: 0.68, badge: "mid", note: "0.68 kg CO₂e", src: "機車 0.068/km × 10km", altLabel: "改搭捷運/公車" },
-      { label: "獨自開車（燃油）", icon: "🚗", kg: 1.73, badge: "high", note: "1.73 kg CO₂e", src: "汽車 0.173/人公里 × 10km", altLabel: "改搭捷運/公車" },
-    ]
-  },
-  {
-    id: 2, category: "早餐", icon: "🍳", sourceKey: "food",
-    title: "早餐選擇？",
-    desc: "食物生產佔全球溫室氣體排放約 26%。一份早餐看似小，但食材來源決定了截然不同的碳代價。",
-    options: [
-      { label: "自製燕麥 / 水果", icon: "🥣", kg: 0.10, badge: "low", note: "0.10 kg CO₂e", src: "穀物係數約 0.5/kg × 200g", altLabel: null },
-      { label: "在地早餐店（蛋餅）", icon: "🥚", kg: 0.35, badge: "low", note: "0.35 kg CO₂e", src: "雞蛋係數 3.0/kg × 約 50g", altLabel: null },
-      { label: "連鎖速食漢堡", icon: "🍔", kg: 1.10, badge: "mid", note: "1.10 kg CO₂e", src: "速食漢堡實測參考值", altLabel: "改吃在地早餐" },
-      { label: "外送培根歐姆蛋", icon: "🥓", kg: 1.10, badge: "mid", note: "1.10 kg CO₂e", src: "豬肉係數 5.9/kg × 80g + 外送", altLabel: "改吃在地早餐" },
-    ]
-  },
-  {
-    id: 3, category: "辦公", icon: "💻", sourceKey: "energy",
-    title: "工作模式？",
-    desc: "用電碳排 = 用電度數 × 0.494 kgCO₂/度（112 年經濟部公告係數）。辦公室冷氣 8 小時約消耗 5.6 kgCO₂e/台。",
-    options: [
-      { label: "在家遠端工作", icon: "🏠", kg: 0.30, badge: "low", note: "0.30 kg CO₂e", src: "電腦+照明用電 × 0.494", altLabel: null },
-      { label: "共享辦公空間", icon: "🏢", kg: 0.55, badge: "low", note: "0.55 kg CO₂e", src: "人均分攤冷氣 × 0.494/度", altLabel: null },
-      { label: "一般辦公室（冷氣開整天）", icon: "❄️", kg: 0.90, badge: "mid", note: "0.90 kg CO₂e", src: "冷氣 1.4/hr × 8hr × 0.494/度", altLabel: "改為居家遠端" },
-      { label: "需長途出差（飛機）", icon: "✈️", kg: 4.50, badge: "high", note: "4.50 kg CO₂e", src: "航空係數管理表 6.0.4 版", altLabel: "改用視訊會議" },
-    ]
-  },
-  {
-    id: 4, category: "午餐", icon: "🍱", sourceKey: "food",
-    title: "午餐怎麼吃？",
-    desc: "蔬食便當約 1.0 kgCO₂e；葷食便當平均約 3.25 kgCO₂e——相差 3 倍以上（桃園市低碳活動指引官方數值）。",
-    options: [
-      { label: "素食便當 / 蔬食", icon: "🥗", kg: 1.00, badge: "low", note: "1.00 kg CO₂e", src: "蔬食便當官方係數 1.0/個", altLabel: null },
-      { label: "雞肉或豬肉料理", icon: "🍗", kg: 2.00, badge: "mid", note: "2.00 kg CO₂e", src: "葷食便當禽豬取低側", altLabel: "改吃素食便當" },
-      { label: "牛肉麵 / 牛肉漢堡", icon: "🍜", kg: 3.25, badge: "high", note: "3.25 kg CO₂e", src: "葷食便當官方均值 3.25/個", altLabel: "改吃雞肉料理" },
-      { label: "進口牛排（含運輸）", icon: "🥩", kg: 5.00, badge: "high", note: "5.00 kg CO₂e", src: "牛肉係數高 + 空運加成", altLabel: "改吃素食便當" },
-    ]
-  },
-  {
-    id: 5, category: "消費", icon: "🛍️", sourceKey: "product",
-    title: "今天你購物了嗎？",
-    desc: "聚酯纖維碳排係數 4.45 kgCO₂e/kg（CFP_P_02）；一支新手機生產約 70 kg CO₂e。",
-    options: [
-      { label: "沒有購物", icon: "🙅", kg: 0.00, badge: "low", note: "0.00 kg CO₂e", src: "零消費排放", altLabel: null },
-      { label: "購買二手衣物", icon: "♻️", kg: 0.10, badge: "low", note: "0.10 kg CO₂e", src: "二手無新生產排放", altLabel: null },
-      { label: "網購一件衣服（快時尚）", icon: "👕", kg: 1.60, badge: "mid", note: "1.60 kg CO₂e", src: "聚酯材質 4.45/kg × 250g + 包材", altLabel: "改買二手或租借" },
-      { label: "購買新手機（均攤當日）", icon: "📱", kg: 8.00, badge: "high", note: "8.00 kg CO₂e", src: "智慧型手機生產 ~70kg，均攤 2 年", altLabel: "延長舊手機使用壽命" },
-    ]
-  },
-  {
-    id: 6, category: "空調", icon: "🌡️", sourceKey: "energy",
-    title: "夏季空調使用習慣？",
-    desc: "每台冷氣設定 22°C 運行 4 小時 = 5.6 kgCO₂e。溫度每調高 1°C 省電 6%，電力係數 0.494 kgCO₂/度（112 年）。",
-    options: [
-      { label: "不開冷氣，電風扇", icon: "🍃", kg: 0.06, badge: "low", note: "0.06 kg CO₂e", src: "電風扇 60W × 4hr × 0.494", altLabel: null },
-      { label: "26°C，搭配電扇", icon: "🌀", kg: 0.42, badge: "low", note: "0.42 kg CO₂e", src: "設定 26°C 省電 24%", altLabel: null },
-      { label: "22°C，全日運轉", icon: "💨", kg: 2.77, badge: "mid", note: "2.77 kg CO₂e", src: "22°C 4hr = 5.6 kgCO₂e（2人共用）", altLabel: "調高至 26°C＋電扇" },
-      { label: "18°C，強力全開", icon: "🥶", kg: 4.20, badge: "high", note: "4.20 kg CO₂e", src: "18°C vs 26°C 額外耗電 +48%", altLabel: "改用電風扇" },
-    ]
-  },
-  {
-    id: 7, category: "飲水", icon: "🧃", sourceKey: "food",
-    title: "日常飲水與飲料？",
-    desc: "一瓶 600ml 寶特瓶裝水碳排 0.15 kgCO₂e（環境部 CFP_P_02 收錄產品實測值）。",
-    options: [
-      { label: "自帶水壺（自來水）", icon: "🫙", kg: 0.01, badge: "low", note: "0.01 kg CO₂e", src: "自來水處理用電極低", altLabel: null },
-      { label: "台灣茶 / 在地咖啡", icon: "🍵", kg: 0.15, badge: "low", note: "0.15 kg CO₂e", src: "在地農產 + 紙杯", altLabel: null },
-      { label: "瓶裝水 + 手搖飲", icon: "🧋", kg: 0.60, badge: "mid", note: "0.60 kg CO₂e", src: "瓶裝水 0.15/瓶 × 2 + 飲料杯", altLabel: "改帶自己的水壺" },
-      { label: "進口氣泡水 + 連鎖咖啡", icon: "☕", kg: 1.00, badge: "high", note: "1.00 kg CO₂e", src: "進口包材高碳排 + 空運咖啡豆", altLabel: "改帶自己的水壺" },
-    ]
-  },
-  {
-    id: 8, category: "娛樂", icon: "📺", sourceKey: "energy",
-    title: "晚上的娛樂方式？",
-    desc: "照明用電係數 0.494 kgCO₂/度，一顆 41W 燈泡開 4 小時約 0.08 kg；PC 遊戲主機約 300W。",
-    options: [
-      { label: "閱讀、散步、下棋", icon: "📖", kg: 0.02, badge: "low", note: "0.02 kg CO₂e", src: "閱讀燈 41W × 1hr × 0.494", altLabel: null },
-      { label: "串流追劇（2 小時）", icon: "📺", kg: 0.10, badge: "low", note: "0.10 kg CO₂e", src: "電視 100W + 路由器 × 2hr", altLabel: null },
-      { label: "電玩遊戲（PC）", icon: "🎮", kg: 0.44, badge: "mid", note: "0.44 kg CO₂e", src: "PC 300W × 3hr × 0.494", altLabel: "改用串流或閱讀" },
-      { label: "戶外大型演唱會", icon: "🎸", kg: 1.20, badge: "high", note: "1.20 kg CO₂e", src: "場館電力 + 交通分攤 + 冷氣", altLabel: "改選戶外小型活動" },
-    ]
-  },
-  {
-    id: 9, category: "晚餐", icon: "🍽️", sourceKey: "food",
-    title: "晚餐選擇？",
-    desc: "官方數據：蔬食便當 1.0 kgCO₂e、葷食便當均值 3.25 kgCO₂e、一週一日蔬食一年可減碳 101.4 kg。",
-    options: [
-      { label: "自煮蔬食料理", icon: "🥦", kg: 0.80, badge: "low", note: "0.80 kg CO₂e", src: "蔬菜穀物係數低 + 自煮省包材", altLabel: null },
-      { label: "家常雞魚料理", icon: "🐟", kg: 1.50, badge: "low", note: "1.50 kg CO₂e", src: "禽魚碳排中等", altLabel: null },
-      { label: "外食熱炒（豬肉）", icon: "🍛", kg: 3.25, badge: "high", note: "3.25 kg CO₂e", src: "葷食便當官方均值 3.25/個", altLabel: "改吃家常雞魚" },
-      { label: "燒烤 / 火鍋大餐", icon: "🔥", kg: 4.50, badge: "high", note: "4.50 kg CO₂e", src: "葷食多樣 + 食材浪費加乘", altLabel: "改吃自煮蔬食" },
-    ]
-  },
+  { id:1, category:"交通", icon:"🚗", sourceKey:"transport",
+    title:"早晨通勤：你的主要交通工具？",
+    desc:"交通排放佔台灣溫室氣體約 13%。同樣通勤 10 公里，不同工具的碳排差距可達 40 倍以上。",
+    options:[
+      {label:"步行 / 腳踏車", icon:"🚲", kg:0.00, badge:"l", note:"0.00 kg CO₂e", src:"零化石燃料消耗"},
+      {label:"捷運 / 公車",  icon:"🚇", kg:0.40, badge:"l", note:"0.40 kg CO₂e", src:"捷運 0.04/人公里 × 10km"},
+      {label:"機車（燃油）",  icon:"🛵", kg:0.68, badge:"m", note:"0.68 kg CO₂e", src:"機車 0.068/km × 10km", altLabel:"改搭捷運/公車"},
+      {label:"獨自開車",     icon:"🚗", kg:1.73, badge:"h", note:"1.73 kg CO₂e", src:"汽車 0.173/人公里 × 10km", altLabel:"改搭捷運/公車"},
+    ]},
+  { id:2, category:"早餐", icon:"🍳", sourceKey:"food",
+    title:"早餐選擇？",
+    desc:"食物生產佔全球溫室氣體排放約 26%。一份早餐看似小，但食材來源決定了截然不同的碳代價。",
+    options:[
+      {label:"自製燕麥 / 水果",   icon:"🥣", kg:0.10, badge:"l", note:"0.10 kg CO₂e", src:"穀物係數約 0.5/kg × 200g"},
+      {label:"在地早餐店（蛋餅）", icon:"🥚", kg:0.35, badge:"l", note:"0.35 kg CO₂e", src:"雞蛋係數 3.0/kg × 約 50g"},
+      {label:"連鎖速食漢堡",       icon:"🍔", kg:1.10, badge:"m", note:"1.10 kg CO₂e", src:"速食漢堡實測參考值", altLabel:"改吃在地早餐"},
+      {label:"外送培根歐姆蛋",     icon:"🥓", kg:1.10, badge:"m", note:"1.10 kg CO₂e", src:"豬肉係數 5.9/kg + 外送", altLabel:"改吃在地早餐"},
+    ]},
+  { id:3, category:"辦公", icon:"💻", sourceKey:"energy",
+    title:"工作模式？",
+    desc:"用電碳排 = 用電度數 × 0.494 kgCO₂/度（112 年經濟部公告）。辦公室冷氣 8 小時約消耗 5.6 kgCO₂e/台。",
+    options:[
+      {label:"在家遠端工作",     icon:"🏠", kg:0.30, badge:"l", note:"0.30 kg CO₂e", src:"電腦+照明 × 0.494"},
+      {label:"共享辦公空間",     icon:"🏢", kg:0.55, badge:"l", note:"0.55 kg CO₂e", src:"人均分攤冷氣 × 0.494"},
+      {label:"辦公室（冷氣全天）",icon:"❄️", kg:0.90, badge:"m", note:"0.90 kg CO₂e", src:"冷氣 1.4/hr × 8hr × 0.494", altLabel:"改為居家遠端"},
+      {label:"長途出差（飛機）",  icon:"✈️", kg:4.50, badge:"h", note:"4.50 kg CO₂e", src:"航空係數管理表 6.0.4 版", altLabel:"改用視訊會議"},
+    ]},
+  { id:4, category:"午餐", icon:"🍱", sourceKey:"food",
+    title:"午餐怎麼吃？",
+    desc:"蔬食便當約 1.0 kgCO₂e；葷食便當平均約 3.25 kgCO₂e——相差 3 倍以上（桃園市低碳活動指引官方數值）。",
+    options:[
+      {label:"素食便當 / 蔬食",   icon:"🥗", kg:1.00, badge:"l", note:"1.00 kg CO₂e", src:"蔬食便當官方係數 1.0/個"},
+      {label:"雞肉或豬肉料理",    icon:"🍗", kg:2.00, badge:"m", note:"2.00 kg CO₂e", src:"葷食便當禽豬取低側", altLabel:"改吃素食便當"},
+      {label:"牛肉麵 / 牛肉漢堡", icon:"🍜", kg:3.25, badge:"h", note:"3.25 kg CO₂e", src:"葷食便當官方均值 3.25/個", altLabel:"改吃雞肉料理"},
+      {label:"進口牛排（含運輸）", icon:"🥩", kg:5.00, badge:"h", note:"5.00 kg CO₂e", src:"牛肉係數高 + 空運加成", altLabel:"改吃素食便當"},
+    ]},
+  { id:5, category:"消費", icon:"🛍️", sourceKey:"product",
+    title:"今天你購物了嗎？",
+    desc:"聚酯纖維碳排係數 4.45 kgCO₂e/kg（CFP_P_02）；一支新手機生產約 70 kg CO₂e。",
+    options:[
+      {label:"沒有購物",            icon:"🙅", kg:0.00, badge:"l", note:"0.00 kg CO₂e", src:"零消費排放"},
+      {label:"購買二手衣物",         icon:"♻️", kg:0.10, badge:"l", note:"0.10 kg CO₂e", src:"二手無新生產排放"},
+      {label:"網購一件衣服（快時尚）",icon:"👕", kg:1.60, badge:"m", note:"1.60 kg CO₂e", src:"聚酯材質 4.45/kg × 250g + 包材", altLabel:"改買二手或租借"},
+      {label:"購買新手機（均攤當日）",icon:"📱", kg:8.00, badge:"h", note:"8.00 kg CO₂e", src:"智慧型手機生產 ~70kg，均攤 2 年", altLabel:"延長舊手機使用壽命"},
+    ]},
+  { id:6, category:"空調", icon:"🌡️", sourceKey:"energy",
+    title:"夏季空調使用習慣？",
+    desc:"每台冷氣設定 22°C 運行 4 小時 = 5.6 kgCO₂e。溫度每調高 1°C 省電 6%，電力係數 0.494 kgCO₂/度。",
+    options:[
+      {label:"不開冷氣，電風扇", icon:"🍃", kg:0.06, badge:"l", note:"0.06 kg CO₂e", src:"電風扇 60W × 4hr × 0.494"},
+      {label:"26°C，搭配電扇",  icon:"🌀", kg:0.42, badge:"l", note:"0.42 kg CO₂e", src:"設定 26°C 省電 24%"},
+      {label:"22°C，全日運轉",  icon:"💨", kg:2.77, badge:"m", note:"2.77 kg CO₂e", src:"22°C 4hr = 5.6 kgCO₂e（2人共用）", altLabel:"調高至 26°C＋電扇"},
+      {label:"18°C，強力全開",  icon:"🥶", kg:4.20, badge:"h", note:"4.20 kg CO₂e", src:"18°C vs 26°C 額外耗電 +48%", altLabel:"改用電風扇"},
+    ]},
+  { id:7, category:"飲水", icon:"🧃", sourceKey:"food",
+    title:"日常飲水與飲料？",
+    desc:"一瓶 600ml 寶特瓶裝水碳排 0.15 kgCO₂e（環境部 CFP_P_02 收錄產品實測值）。",
+    options:[
+      {label:"自帶水壺（自來水）",    icon:"🫙", kg:0.01, badge:"l", note:"0.01 kg CO₂e", src:"自來水處理用電極低"},
+      {label:"台灣茶 / 在地咖啡",    icon:"🍵", kg:0.15, badge:"l", note:"0.15 kg CO₂e", src:"在地農產 + 紙杯"},
+      {label:"瓶裝水 + 手搖飲",     icon:"🧋", kg:0.60, badge:"m", note:"0.60 kg CO₂e", src:"瓶裝水 0.15/瓶 × 2 + 飲料杯", altLabel:"改帶自己的水壺"},
+      {label:"進口氣泡水 + 連鎖咖啡",icon:"☕", kg:1.00, badge:"h", note:"1.00 kg CO₂e", src:"進口包材高碳排 + 空運咖啡豆", altLabel:"改帶自己的水壺"},
+    ]},
+  { id:8, category:"娛樂", icon:"📺", sourceKey:"energy",
+    title:"晚上的娛樂方式？",
+    desc:"照明用電係數 0.494 kgCO₂/度；PC 遊戲主機約 300W。串流追劇比想像中低碳許多。",
+    options:[
+      {label:"閱讀、散步、下棋",  icon:"📖", kg:0.02, badge:"l", note:"0.02 kg CO₂e", src:"閱讀燈 41W × 1hr × 0.494"},
+      {label:"串流追劇（2 小時）",icon:"📺", kg:0.10, badge:"l", note:"0.10 kg CO₂e", src:"電視 100W + 路由器 × 2hr"},
+      {label:"電玩遊戲（PC）",    icon:"🎮", kg:0.44, badge:"m", note:"0.44 kg CO₂e", src:"PC 300W × 3hr × 0.494", altLabel:"改選串流或閱讀"},
+      {label:"戶外大型演唱會",    icon:"🎸", kg:1.20, badge:"h", note:"1.20 kg CO₂e", src:"場館電力 + 交通分攤 + 冷氣", altLabel:"改選戶外小型活動"},
+    ]},
+  { id:9, category:"晚餐", icon:"🍽️", sourceKey:"food",
+    title:"晚餐選擇？",
+    desc:"官方數據：蔬食便當 1.0 kgCO₂e、葷食均值 3.25 kgCO₂e；一週一日蔬食，一年可減碳 101.4 kg。",
+    options:[
+      {label:"自煮蔬食料理", icon:"🥦", kg:0.80, badge:"l", note:"0.80 kg CO₂e", src:"蔬菜穀物係數低 + 自煮省包材"},
+      {label:"家常雞魚料理", icon:"🐟", kg:1.50, badge:"l", note:"1.50 kg CO₂e", src:"禽魚碳排中等"},
+      {label:"外食熱炒豬肉", icon:"🍛", kg:3.25, badge:"h", note:"3.25 kg CO₂e", src:"葷食便當官方均值 3.25/個", altLabel:"改吃家常雞魚"},
+      {label:"燒烤 / 火鍋大餐",icon:"🔥",kg:4.50, badge:"h", note:"4.50 kg CO₂e", src:"葷食多樣 + 食材浪費加乘", altLabel:"改吃自煮蔬食"},
+    ]},
 ];
 
+/* Dynamic story pairs per category */
+const STORIES = {
+  "交通": {
+    change: {
+      headline: "大眾運輸使用率創歷史新高，台北空氣品質連續 90 天優良",
+      subhead: "市民：「不開車反而更輕鬆，每個月還省了一萬塊」",
+      body: "台北（本報記者 林佳穎）—— 最新調查顯示，選擇大眾運輸通勤的市民比例已達 78%，台北盆地 PM2.5 濃度降至近三十年最低值。多名受訪市民表示，省下的油錢和停車費已足夠每年出國旅遊一次。",
+      stats: [{l:"夏季均溫", v:"+1.4°C"},{l:"珊瑚礁覆蓋率", v:"42%（恢復中）"},{l:"月均電費", v:"NT$920"}]
+    },
+    continue: {
+      headline: "台北塞車費每月逾萬元，上班族嘆「只剩下工作和繳費」",
+      subhead: "政府：不漲費不足以達成減碳目標，環保團體仍批為德不卒",
+      body: "台北（本報記者 陳怡如）—— 政府於本月正式實施都市碳排通行費，獨自開車通勤月費已突破 NT$10,800。多名上班族坦言正考慮搬離台北，每逢上下班時段捷運依舊人滿為患。",
+      stats: [{l:"夏季均溫", v:"+3.0°C"},{l:"珊瑚礁覆蓋率", v:"3%（全滅邊緣）"},{l:"月均電費", v:"NT$2,600"}]
+    }
+  },
+  "早餐": {
+    change: {
+      headline: "在地早餐店復興，年輕世代以「慢食早晨」對抗外送文化",
+      subhead: "食物碳足跡標示制度上路，消費者開始用新眼光看菜單",
+      body: "台北（本報記者 黃思穎）—— 全台在地早餐店數量三年成長 23%，年輕族群開始重視食物碳足跡，在地食材、低包材的選擇正成為新世代的早晨儀式。碳足跡標示讓每個人的選擇都更有意識。",
+      stats: [{l:"夏季均溫", v:"+1.3°C"},{l:"食物廢棄物", v:"-31%"},{l:"月均電費", v:"NT$900"}]
+    },
+    continue: {
+      headline: "外送碳稅上路，每份外送早餐加收 NT$45，App 評分跌至歷史低點",
+      subhead: "「買早餐還要繳罰款？」民眾怒火延燒，業者緊急召開緊急記者會",
+      body: "台北（本報記者 吳明哲）—— 政府為抑制外送碳排放，宣布自本月起對每筆外送訂單加收 NT$45 碳稅。外送平台股價應聲重挫，多名外送員上街抗議，稱此舉是「搶奪底層勞工的飯碗」。",
+      stats: [{l:"夏季均溫", v:"+2.7°C"},{l:"外送碳稅", v:"NT$45/筆"},{l:"月均電費", v:"NT$2,200"}]
+    }
+  },
+  "辦公": {
+    change: {
+      headline: "遠端辦公永久化，台灣企業碳排量五年減少 31%",
+      subhead: "員工滿意度創歷史新高：「通勤時間歸零，還給我了人生」",
+      body: "台北（本報記者 張馨云）—— 台灣主要企業宣布混合辦公制度永久化，通勤碳排較 2025 年下降 31%。員工滿意度調查顯示，九成上班族認為生活品質有顯著改善，台北道路壅塞情況也大幅緩解。",
+      stats: [{l:"夏季均溫", v:"+1.4°C"},{l:"企業碳排", v:"-31%"},{l:"月均電費", v:"NT$880"}]
+    },
+    continue: {
+      headline: "航空碳稅每公里 NT$2.5，商務人士出差成本暴增三倍",
+      subhead: "企業呼籲寬限期，環保團體強力反對：「讓碳排付出代價是基本道理」",
+      body: "台北（本報記者 劉承翰）—— 交通部宣布航空碳稅正式上路，一趟台北東京商務來回增加 NT$12,000 碳稅成本。多家跨國企業宣布縮減亞太區出差預算，部分公司已考慮將亞太總部遷往碳稅較低的城市。",
+      stats: [{l:"夏季均溫", v:"+3.1°C"},{l:"航空碳稅", v:"NT$2.5/km"},{l:"月均電費", v:"NT$3,200"}]
+    }
+  },
+  "午餐": {
+    change: {
+      headline: "台灣蔬食革命：植物性午餐市占率首破五成",
+      subhead: "農委會：在地蔬食供應鏈成熟，碳排量三年減少 18%",
+      body: "台北（本報記者 許雅婷）—— 台灣午餐蔬食市占率今年首度突破 50%。農委會表示在地蔬食供應鏈已穩定成熟，消費者選擇低碳飲食的意識大幅提升，帶動農業轉型，也成為其他亞洲國家的仿效對象。",
+      stats: [{l:"夏季均溫", v:"+1.3°C"},{l:"蔬食市占", v:"51%"},{l:"月均電費", v:"NT$920"}]
+    },
+    continue: {
+      headline: "牛肉每公斤突破 NT$2,000，台灣宣布限購令，傳統餐廳業者群起抗議",
+      subhead: "畜牧業甲烷被列「氣候炸彈」：科學家說這是無法再逃避的事實",
+      body: "台北（本報記者 林建宏）—— 政府將於下月實施牛肉限購令，每戶每週不得超過 500 克。一名牛肉麵店業者老淚縱橫表示：「我父親傳給我的店，就要這樣結束了嗎？」環保署長表示此為「氣候緊急措施，別無選擇」。",
+      stats: [{l:"夏季均溫", v:"+2.9°C"},{l:"牛肉均價", v:"NT$2,000/kg"},{l:"月均電費", v:"NT$2,600"}]
+    }
+  },
+  "消費": {
+    change: {
+      headline: "循環經濟盛行，二手市場規模首度超越全新商品市場",
+      subhead: "「修而不換」成為新世代的生活哲學，也成為年輕人的身份認同",
+      body: "台北（本報記者 陳雅芳）—— 台灣二手商品市場今年規模突破 NT$3,000 億，首度超越新品市場。年輕世代將租借和修理視為生活方式，二手市集在台北已成為週末最受歡迎的社交場所。",
+      stats: [{l:"夏季均溫", v:"+1.2°C"},{l:"電子廢棄物", v:"-44%"},{l:"月均電費", v:"NT$850"}]
+    },
+    continue: {
+      headline: "電子廢棄物堆積如山，台灣垃圾場面積超越台北市，居民怒告政府",
+      subhead: "每年 85 萬噸電子廢棄物：「我們把毒留給了自己的孩子」",
+      body: "台北（本報記者 方俊明）—— 環保署最新數據顯示，台灣每年產生 85 萬噸電子廢棄物，其中僅 23% 妥善回收。新北市里長帶居民集體至環保署門口抗議，要求政府正視電子廢棄物對水源和土壤的污染問題。",
+      stats: [{l:"夏季均溫", v:"+2.7°C"},{l:"電子廢棄物", v:"85萬噸/年"},{l:"月均電費", v:"NT$2,200"}]
+    }
+  },
+  "空調": {
+    change: {
+      headline: "智慧電網普及，台灣家庭電費五年降低 28%，尖峰用電創新低",
+      subhead: "政府節能補貼奏效：「一個好的政策，可以改變一整個社會的習慣」",
+      body: "台北（本報記者 謝宛真）—— 經濟部宣布台灣夏季尖峰用電需求較 2025 年下降 18%，智慧溫控系統補貼政策帶動全民節能風潮。一名台南家庭主婦表示：「現在不開到 22 度，其實也活得很好。」",
+      stats: [{l:"夏季均溫", v:"+1.3°C"},{l:"電費降幅", v:"-28%"},{l:"月均電費", v:"NT$820"}]
+    },
+    continue: {
+      headline: "夏季每週輪流停電 4 小時，製造業損失慘重，電費調漲 180%",
+      subhead: "50 萬戶申請電費補貼：「繳不起電費了，這是在過什麼日子？」",
+      body: "台北（本報記者 江志偉）—— 台電宣布今夏全台分區輪流停電，尖峰缺電達 350 萬瓩。電費調漲 180% 引爆民怨，台北市長緊急宣布開放政府機關供市民避暑，有民眾帶著行李箱住進區公所大廳。",
+      stats: [{l:"夏季均溫", v:"+3.0°C"},{l:"電費漲幅", v:"+180%"},{l:"月均電費", v:"NT$3,100"}]
+    }
+  },
+  "飲水": {
+    change: {
+      headline: "自備容器文化扎根，台灣一次性塑膠垃圾量減少 44%",
+      subhead: "國際媒體：台灣是「自備容器革命」的全球先行者",
+      body: "台北（本報記者 蔡欣穎）—— 推行自備容器獎勵制度五年後，台灣一次性塑膠廢棄物較 2025 年減少 44%，國際環保組織給予最高評價。一名咖啡廳老闆說：「自備杯的客人現在超過八成，我們幾乎不用再買拋棄式杯子了。」",
+      stats: [{l:"夏季均溫", v:"+1.2°C"},{l:"塑膠廢棄物", v:"-44%"},{l:"月均電費", v:"NT$900"}]
+    },
+    continue: {
+      headline: "塑膠微粒已進入台灣飲用水，衛福部發佈健康警示",
+      subhead: "研究：每週吃進一張信用卡份量的塑膠 —— 這已是現在式",
+      body: "台北（本報記者 趙偉倫）—— 衛福部最新調查顯示，台灣 78% 自來水樣本中檢測到微塑膠。醫學研究指出長期暴露微塑膠與心血管疾病、免疫異常有關，政府建議全台家庭安裝過濾器，但補貼預算仍未到位。",
+      stats: [{l:"夏季均溫", v:"+2.5°C"},{l:"飲水微塑膠", v:"78%水樣陽性"},{l:"月均電費", v:"NT$2,000"}]
+    }
+  },
+  "娛樂": {
+    change: {
+      headline: "戶外低碳娛樂風潮，台北城市森林計畫讓市區降溫 1.8°C",
+      subhead: "公共空間活化讓人與人更靠近：「以前都宅在家，現在才發現社區有多美」",
+      body: "台北（本報記者 羅欣怡）—— 台北市推動城市森林計畫成效顯著，市區均溫較 2025 年下降 1.8°C。低碳休閒活動大幅推廣後，市民心理健康指數同步上升，急診室因熱衰竭就診人數大幅減少。",
+      stats: [{l:"夏季均溫", v:"+1.3°C"},{l:"市區降溫", v:"-1.8°C"},{l:"月均電費", v:"NT$880"}]
+    },
+    continue: {
+      headline: "電玩直播業被列「高耗能產業」，數據中心用電已占全台 12%",
+      subhead: "政府祭重稅，電競公司喊著要出走：「台灣要成為數位孤島嗎？」",
+      body: "台北（本報記者 蔡明哲）—— 數位娛樂產業正式列入高耗能管制清單，電競中心每年須繳交高額碳費。多家電競公司考慮遷往海外，業界人士指出：「政府一邊說要發展數位經濟，一邊用碳稅把我們趕走。」",
+      stats: [{l:"夏季均溫", v:"+2.7°C"},{l:"數據中心用電", v:"占全台12%"},{l:"月均電費", v:"NT$2,500"}]
+    }
+  },
+  "晚餐": {
+    change: {
+      headline: "台灣「週一蔬食」運動：全國每年減少碳排 120 萬噸",
+      subhead: "學校蔬食日帶動的飲食革命，正在靜悄悄地改變一個世代",
+      body: "台北（本報記者 吳美玲）—— 農委會統計，全台「每週一蔬食」參與人數已達 600 萬，每年減少碳排放 120 萬噸。一名參與十年的台南家庭主婦說：「我孩子問我為什麼要蔬食，我說因為我想讓他長大後還有珊瑚礁可以看。」",
+      stats: [{l:"夏季均溫", v:"+1.4°C"},{l:"年減碳排", v:"120萬噸"},{l:"月均電費", v:"NT$900"}]
+    },
+    continue: {
+      headline: "外食碳排稅上路，一頓燒烤大餐加收 NT$280，餐飲業哭聲連天",
+      subhead: "老闆：「客人少了三成，我父親那一代開創的店，要在我手上結束嗎？」",
+      body: "台北（本報記者 林泰宇）—— 環保署推出餐飲碳排稅制度，火鍋或燒烤大餐最高需額外支付 NT$280。一名中壢老字號燒肉店第二代業主接受採訪時泣不成聲，現場記者無人開口打斷。",
+      stats: [{l:"夏季均溫", v:"+2.9°C"},{l:"餐飲碳排稅", v:"最高NT$280/餐"},{l:"月均電費", v:"NT$2,800"}]
+    }
+  }
+};
+
+/* ══════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════ */
+const PAGE_LABELS = ['你的分數', '你的未來', '全球視角', '行動計畫'];
+let currentPage = 1;
+const TOTAL_PAGES = 4;
+
+function initPages() {
+  const nav = document.getElementById('pnav');
+  const dots = document.getElementById('pnav-dots');
+  nav.classList.add('show');
+  dots.innerHTML = PAGE_LABELS.map((l,i) => `
+    <div class="pdot ${i===0?'active':''}" onclick="goPage(${i+1})" title="${l}"></div>
+  `).join('');
+  goPage(1);
+}
+
+function goPage(n) {
+  currentPage = n;
+  // Hide all pages
+  for (let i = 1; i <= TOTAL_PAGES; i++) {
+    const p = document.getElementById(`rpage-${i}`);
+    if (p) { p.classList.remove('active'); }
+  }
+  // Show target
+  const target = document.getElementById(`rpage-${n}`);
+  if (target) {
+    target.classList.add('active');
+    // Re-trigger animation
+    target.style.animation = 'none';
+    target.offsetHeight;
+    target.style.animation = '';
+  }
+  // Update dots
+  document.querySelectorAll('.pdot').forEach((d,i) => {
+    d.classList.toggle('active', i === n-1);
+  });
+  // Update label
+  document.getElementById('pnav-label').textContent = `${n} / ${TOTAL_PAGES} · ${PAGE_LABELS[n-1]}`;
+
+  // Trigger bench bars on page 3
+  if (n === 3) {
+    setTimeout(() => {
+      document.querySelectorAll('.bench-bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+        el.style.transition = 'width 1.3s cubic-bezier(0.16,1,0.3,1)';
+      });
+    }, 100);
+  }
+  // Trigger rec cards on page 4
+  if (n === 4) {
+    setTimeout(() => {
+      document.querySelectorAll('.rec-card').forEach((el,i) => {
+        setTimeout(() => el.classList.add('visible'), i * 120);
+      });
+    }, 100);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
 const TOTAL_Q = questions.length;
-const MAX_KG = 20;
 let answers = {};
-let accentColor = '#4ade80';
 
-/* ── UTILS ── */
-function setAccent(color) {
-  accentColor = color;
-  document.documentElement.style.setProperty('--accent', color);
+function getTheme(kg) {
+  if (kg < 3)  return { bg:'#0c0a09', accent:'#f0c878', accentGlow:'rgba(240,200,120,0.15)' };
+  if (kg < 6)  return { bg:'#080f0c', accent:'#6ee7b7', accentGlow:'rgba(110,231,183,0.15)' };
+  if (kg < 10) return { bg:'#0f0d07', accent:'#facc15', accentGlow:'rgba(250,204,21,0.12)' };
+  if (kg < 14) return { bg:'#110a06', accent:'#fb923c', accentGlow:'rgba(251,146,60,0.12)' };
+  return        { bg:'#140608', accent:'#f87171', accentGlow:'rgba(248,113,113,0.12)' };
 }
 
-function getAccentForKg(kg) {
-  const pct = kg / MAX_KG;
-  if (pct > 0.65) return '#f87171';
-  if (pct > 0.35) return '#facc15';
-  return '#4ade80';
+function applyTheme(kg) {
+  const t = getTheme(kg);
+  const r = document.documentElement;
+  r.style.setProperty('--bg', t.bg);
+  r.style.setProperty('--accent', t.accent);
+  r.style.setProperty('--accent-glow', t.accentGlow);
 }
 
-function animateCount(el, target, duration = 800) {
+function countUp(el, target, ms = 900) {
   const start = performance.now();
   const from = parseFloat(el.textContent) || 0;
   function frame(now) {
-    const progress = Math.min((now - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    el.textContent = (from + (target - from) * ease).toFixed(2);
-    if (progress < 1) requestAnimationFrame(frame);
+    const p = Math.min((now - start) / ms, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (from + (target - from) * e).toFixed(2);
+    if (p < 1) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
 
-/* ── QUIZ ── */
+/* ══════════════════════════════════════
+   QUIZ
+══════════════════════════════════════ */
 function buildQuiz() {
   const sec = document.getElementById('quiz-section');
   sec.innerHTML = `
-    <div class="quiz-header-bar">
-      <span class="quiz-title">24H 碳足跡模擬器</span>
-      <span class="quiz-counter" id="q-counter">0 / ${TOTAL_Q} 完成</span>
-    </div>
-  `;
+    <div class="quiz-top">
+      <span class="quiz-top-title">Carbon Life · 24H 碳足跡模擬</span>
+      <span class="quiz-top-counter" id="qtop-counter">0 / ${TOTAL_Q} 完成</span>
+    </div>`;
   questions.forEach((q, i) => {
     const card = document.createElement('div');
-    card.className = 'q-card';
-    card.id = `qcard-${q.id}`;
+    card.className = 'qcard';
+    card.id = `qc${q.id}`;
     card.innerHTML = `
-      <div class="q-meta">
-        <span class="q-num">Q${String(q.id).padStart(2,'0')}</span>
-        <span class="q-sep">·</span>
-        <span class="q-cat">${q.icon} ${q.category}</span>
-        <span class="q-src-tag" title="${COEFF_SOURCES[q.sourceKey]}">⚗ 官方係數</span>
+      <div class="qmeta">
+        <span class="qnum">Q${String(q.id).padStart(2,'0')}</span>
+        <span class="qdot">·</span>
+        <span class="qcat">${q.icon} ${q.category}</span>
+        <span class="qsrc" title="數據來源：官方係數資料庫">⚗ 官方係數</span>
       </div>
-      <div class="q-title">${q.title}</div>
-      <div class="q-desc">${q.desc}</div>
+      <div class="qtitle">${q.title}</div>
+      <div class="qdesc">${q.desc}</div>
       <div class="opts">
-        ${q.options.map(opt => `
-          <button class="opt" onclick="selectOpt(${q.id}, ${opt.kg}, '${opt.icon}', '${q.category}', '${opt.label.replace(/'/g,"\\'")}', this)">
-            <span class="opt-badge ${opt.badge === 'low' ? 'badge-low' : opt.badge === 'mid' ? 'badge-mid' : 'badge-high'}">${opt.badge === 'low' ? '低碳' : opt.badge === 'mid' ? '中碳' : '高碳'}</span>
-            <span class="opt-icon">${opt.icon}</span>
-            <span class="opt-label">${opt.label}</span>
-            <span class="opt-kg">${opt.note}</span>
-            <span class="opt-src-small">📋 ${opt.src.split('｜')[0]}</span>
-          </button>
-        `).join('')}
-      </div>
-    `;
+        ${q.options.map(o => `
+          <button class="opt" onclick="pick(${q.id},${o.kg},'${o.icon}','${q.category}','${(o.label||'').replace(/'/g,"\\'")}',this)">
+            <span class="opt-badge ${o.badge==='l'?'bl':o.badge==='m'?'bm':'bh'}">${o.badge==='l'?'低碳':o.badge==='m'?'中碳':'高碳'}</span>
+            <span class="opt-ico">${o.icon}</span>
+            <span class="opt-lbl">${o.label}</span>
+            <span class="opt-kg">${o.note}</span>
+            <span class="opt-src-s">📋 ${o.src.split('｜')[0]}</span>
+          </button>`).join('')}
+      </div>`;
     sec.appendChild(card);
-    setTimeout(() => card.classList.add('visible'), 60 * i);
+    setTimeout(() => card.classList.add('visible'), 55 * i);
   });
 }
 
-function selectOpt(qId, kg, icon, category, label, btn) {
+function pick(qId, kg, icon, category, label, btn) {
   answers[qId] = { kg, icon, category, label };
-  const card = document.getElementById(`qcard-${qId}`);
+  const card = document.getElementById(`qc${qId}`);
   card.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   card.classList.add('answered');
-  updateHeader();
-  if (Object.keys(answers).length === TOTAL_Q) {
-    setTimeout(showResult, 700);
-  }
-}
+  const total = Object.values(answers).reduce((s,a) => s+a.kg, 0);
+  const done = Object.keys(answers).length;
+  applyTheme(total);
 
-function updateHeader() {
-  const total = Object.values(answers).reduce((s, a) => s + a.kg, 0);
-  const answered = Object.keys(answers).length;
-  const color = getAccentForKg(total);
-  setAccent(color);
-
-  const hCarbon = document.getElementById('h-carbon');
-  animateCount(hCarbon, total, 400);
-  document.getElementById('h-progress').textContent = `${answered}/${TOTAL_Q}`;
-  document.getElementById('progress-fill').style.width = `${(answered / TOTAL_Q) * 100}%`;
-  document.getElementById('progress-fill').style.background = color;
+  // Update header
+  const hco2 = document.getElementById('h-co2');
+  countUp(hco2, total, 300);
+  document.getElementById('h-prog').textContent = `${done}/${TOTAL_Q}`;
+  const hbar = document.getElementById('hbar');
+  hbar.style.width = `${(done/TOTAL_Q)*100}%`;
+  hbar.style.background = getTheme(total).accent;
+  document.getElementById('qtop-counter').textContent = `${done} / ${TOTAL_Q} 完成`;
 
   // Mobile bar
-  const mbCarbon = document.getElementById('mb-carbon');
-  mbCarbon.textContent = total.toFixed(2) + ' kg CO₂e';
-  mbCarbon.style.color = color;
-  document.getElementById('mb-progress').textContent = `${answered} / ${TOTAL_Q} 題`;
-  document.getElementById('mb-fill').style.width = `${(answered / TOTAL_Q) * 100}%`;
-  document.getElementById('mb-fill').style.background = color;
-  document.getElementById('q-counter').textContent = `${answered} / ${TOTAL_Q} 完成`;
+  document.getElementById('mb-kg').textContent = total.toFixed(2) + ' kg CO₂e';
+  document.getElementById('mb-kg').style.color = getTheme(total).accent;
+  document.getElementById('mb-prog').textContent = `${done} / ${TOTAL_Q} 題`;
+  const mbf = document.getElementById('mb-fill');
+  mbf.style.width = `${(done/TOTAL_Q)*100}%`;
+  mbf.style.background = getTheme(total).accent;
+
+  if (done === TOTAL_Q) setTimeout(showResult, 700);
 }
 
 function startQuiz() {
-  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('hero').style.display = 'none';
   document.getElementById('quiz-section').style.display = 'block';
-  document.getElementById('mobile-bar').style.display = 'block';
+  document.getElementById('mbar').style.display = 'block';
   buildQuiz();
-  window.scrollTo({ top: 0 });
+  window.scrollTo({top:0});
 }
 
-/* ── RESULT ── */
+/* ══════════════════════════════════════
+   RESULT
+══════════════════════════════════════ */
 function showResult() {
   document.getElementById('quiz-section').style.display = 'none';
-  document.getElementById('mobile-bar').style.display = 'none';
-  const sec = document.getElementById('result-section');
-  sec.style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('mbar').style.display = 'none';
+  document.getElementById('result-section').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
 
-  const total = Object.values(answers).reduce((s, a) => s + a.kg, 0);
-  const color = getAccentForKg(total);
-  setAccent(color);
+  const total = Object.values(answers).reduce((s,a) => s+a.kg, 0);
+  applyTheme(total);
 
   // Score
   const scoreEl = document.getElementById('r-score');
-  animateCount(scoreEl, total, 1200);
-  scoreEl.style.color = color;
-  document.getElementById('progress-fill').style.background = color;
+  countUp(scoreEl, total, 1400);
+  scoreEl.style.color = getTheme(total).accent;
 
-  // Verdict
   let verdict, desc;
-  if (total < 4) {
-    verdict = "🍀 低碳楷模";
-    desc = "你的生活方式接近《巴黎協定》1.5°C 目標，遠低於台灣平均值。你是真正的行動者。";
-  } else if (total < 9) {
-    verdict = "🌿 低於平均";
-    desc = "不錯！你的碳足跡低於台灣平均值。有幾個關鍵選項若調整，可進一步降低排放。";
-  } else if (total < 14) {
-    verdict = "🌍 接近台灣平均";
-    desc = "你的碳足跡與台灣人均相近。高碳選項集中在飲食與交通，有很大的改善空間。";
-  } else if (total < 20) {
-    verdict = "🌋 超出警戒線";
-    desc = "你的生活方式對地球造成明顯壓力。最高排放來源需要優先改變。";
-  } else {
-    verdict = "🔥 極高碳排放";
-    desc = "警報。你的碳足跡是台灣平均值的數倍。立即從最高碳選項開始改變。";
-  }
+  if (total < 4)       { verdict="🍀 低碳楷模"; desc="你的生活方式已接近《巴黎協定》1.5°C 目標。你的每個選擇都在為更好的未來投票。"; }
+  else if (total < 9)  { verdict="🌿 低於平均"; desc="不錯。你的碳足跡低於台灣平均值，有幾個關鍵選項若調整，可以進一步降低排放。"; }
+  else if (total < 14) { verdict="🌍 接近台灣平均"; desc="你的碳足跡與台灣人均相近。飲食與交通是最大的改善空間。"; }
+  else if (total < 20) { verdict="🌋 超出警戒線"; desc="你的生活方式對地球造成明顯壓力。最高排放的選項需要優先改變。"; }
+  else                  { verdict="🔥 極高碳排放"; desc="警報。你的碳足跡是台灣平均值的數倍。立即從最高碳選項開始改變。"; }
+
   document.getElementById('r-verdict').textContent = verdict;
   document.getElementById('r-desc').textContent = desc;
 
-  // Tangible equivalents
+  // Equiv chips
   const trees = Math.round(total / 0.058);
   const carKm = Math.round(total / 0.173 * 10) / 10;
   const phones = Math.round(total * 122);
-  document.getElementById('equiv-row').innerHTML = `
-    <div class="equiv-chip">
-      <span class="equiv-icon">🌳</span>
-      <div class="equiv-text">需要 <strong>${trees} 棵樹</strong><br>吸碳一天</div>
-    </div>
-    <div class="equiv-chip">
-      <span class="equiv-icon">🚗</span>
-      <div class="equiv-text">等於開車<br><strong>${carKm} 公里</strong></div>
-    </div>
-    <div class="equiv-chip">
-      <span class="equiv-icon">📱</span>
-      <div class="equiv-text">等於手機<br><strong>充電 ${phones} 次</strong></div>
-    </div>
-  `;
+  document.getElementById('equiv-chips').innerHTML = `
+    <div class="equiv-chip"><span class="equiv-chip-ico">🌳</span><div class="equiv-chip-txt">需要 <strong>${trees} 棵樹</strong><br>吸碳一天</div></div>
+    <div class="equiv-chip"><span class="equiv-chip-ico">🚗</span><div class="equiv-chip-txt">等於開車<br><strong>${carKm} 公里</strong></div></div>
+    <div class="equiv-chip"><span class="equiv-chip-ico">📱</span><div class="equiv-chip-txt">等於手機<br><strong>充電 ${phones} 次</strong></div></div>`;
 
-  // Benchmark
-  const benchmarks = [
-    { label: '你今天', meaning: '你的 24 小時碳足跡', kg: total, cls: 'you', colorStyle: color },
-    { label: '台灣平均', meaning: '台灣人均每日排放，是全球最高之一', kg: 14.0, cls: 'tw', colorStyle: '#facc15' },
-    { label: '全球平均', meaning: '全球人均每日，仍是巴黎目標的 3.8 倍', kg: 11.5, cls: 'global', colorStyle: '#fb923c' },
-    { label: '巴黎協定', meaning: '1.5°C 目標每人每日上限，地球的生存底線', kg: 3.0, cls: 'paris', colorStyle: '#60a5fa' },
-  ];
-  const maxKg = Math.max(...benchmarks.map(b => b.kg), 1);
-  document.getElementById('bench-list').innerHTML = benchmarks.map(b => `
-    <div class="bench-row">
-      <div class="bench-left">
-        <span class="bench-label">${b.label}</span>
-        <span class="bench-meaning">${b.meaning}</span>
+  buildNewspaper(total);
+  buildBench(total);
+  buildTempEditions(total);
+  buildRecs(total);
+  buildOneAction();
+
+  // Ending colophon
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('ending-score').textContent = `你今天的碳足跡：${total.toFixed(2)} kg CO₂e`;
+  document.getElementById('ending-date').textContent = `記錄於 ${dateStr}`;
+
+  initPages();
+}
+
+/* ── NEWSPAPER ── */
+function buildNewspaper(total) {
+  // Find the highest-emission category
+  const sorted = Object.entries(answers)
+    .map(([qId, ans]) => ({...ans, qId: parseInt(qId)}))
+    .sort((a,b) => b.kg - a.kg);
+
+  const topCat = sorted[0]?.category || '午餐';
+  const story = STORIES[topCat] || STORIES['午餐'];
+  const year = 2051;
+  const dateStr = `${year}年 8 月 12 日`;
+
+  document.getElementById('newspaper').innerHTML = `
+    <div class="np-masthead">
+      <span class="np-name">THE CARBON TIMES</span>
+      <span class="np-tagline">根據你今天 ${total.toFixed(2)} kg CO₂e 的生活方式推算</span>
+      <div class="np-meta-row">
+        <span>台灣特別報導版</span>
+        <span>${dateStr}</span>
+        <span>第 1 版 / 共 1 版</span>
       </div>
+    </div>
+    <div class="np-columns">
+      <div class="np-col left">
+        <span class="np-col-header change">✓ 如果你從明天改變</span>
+        <div class="np-headline">${story.change.headline}</div>
+        <div class="np-subhead">${story.change.subhead}</div>
+        <div class="np-byline">本報記者 · 氣候希望特派</div>
+        <div class="np-body">${story.change.body}</div>
+        <div class="np-stats">
+          ${story.change.stats.map(s=>`<div class="np-stat-row"><span class="np-stat-lbl">${s.l}</span><span class="np-stat-val">${s.v}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="np-divider"></div>
+      <div class="np-col right">
+        <span class="np-col-header continue">✕ 你繼續今天的生活方式</span>
+        <div class="np-headline">${story.continue.headline}</div>
+        <div class="np-subhead">${story.continue.subhead}</div>
+        <div class="np-byline">本報記者 · 氣候危機特派</div>
+        <div class="np-body">${story.continue.body}</div>
+        <div class="np-stats">
+          ${story.continue.stats.map(s=>`<div class="np-stat-row"><span class="np-stat-lbl">${s.l}</span><span class="np-stat-val">${s.v}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── BENCHMARK ── */
+function buildBench(total) {
+  const benchmarks = [
+    {label:'你今天',   meaning:'你的 24 小時碳足跡', kg:total, cls:'you', color: getTheme(total).accent},
+    {label:'台灣平均', meaning:'台灣人均每日排放，高居全球前段班', kg:14.0, cls:'tw', color:'#facc15'},
+    {label:'全球平均', meaning:'全球人均，仍是巴黎目標的 3.8 倍', kg:11.5, cls:'global', color:'#fb923c'},
+    {label:'巴黎協定', meaning:'1.5°C 目標每日上限，地球的生存底線', kg:3.0, cls:'paris', color:'#60a5fa'},
+  ];
+  const maxKg = Math.max(...benchmarks.map(b=>b.kg), 1);
+  document.getElementById('bench-list').innerHTML = benchmarks.map(b=>`
+    <div class="bench-row">
+      <div><span class="bench-lbl">${b.label}</span><span class="bench-meaning">${b.meaning}</span></div>
       <div class="bench-bar-wrap">
-        <div class="bench-bar-fill ${b.cls}" style="width:0%; background:${b.colorStyle}" data-pct="${(b.kg/maxKg)*100}"></div>
+        <div class="bench-bar-fill" style="background:${b.color};width:0%" data-pct="${(b.kg/maxKg)*100}"></div>
       </div>
       <div class="bench-val"><strong>${b.kg.toFixed(1)}</strong> kg/日</div>
-    </div>
-  `).join('');
-  setTimeout(() => {
-    document.querySelectorAll('.bench-bar-fill').forEach(el => {
-      el.style.width = el.dataset.pct + '%';
-    });
-  }, 200);
+    </div>`).join('');
+}
 
-  // Breakdown
-  const catTotals = {};
-  Object.values(answers).forEach(a => {
-    catTotals[a.category] = (catTotals[a.category] || 0) + a.kg;
-  });
-  document.getElementById('breakdown-grid').innerHTML = Object.entries(catTotals)
-    .sort((a, b) => b[1] - a[1])
-    .map(([cat, kg]) => {
-      const q = questions.find(q => q.category === cat);
-      return `<div class="breakdown-item">
-        <span class="breakdown-icon">${q ? q.icon : '📦'}</span>
-        <div class="breakdown-cat">${cat}</div>
-        <div class="breakdown-kg">${kg.toFixed(2)} kg</div>
-      </div>`;
-    }).join('');
-  setTimeout(() => {
-    document.querySelectorAll('.breakdown-item').forEach((el, i) => {
-      setTimeout(() => el.classList.add('animated'), i * 80);
-    });
-  }, 400);
-
-  // Temperature scenarios
-  function getTempLevel(kg) {
+/* ── TEMP EDITIONS ── */
+function buildTempEditions(total) {
+  function getMyLevel(kg) {
     if (kg < 5) return 't15';
     if (kg < 12) return 't20';
     return 't30';
   }
-  const myLevel = getTempLevel(total);
-  const tempScenarios = [
-    {
-      id: 't15', deg: '+1.5°C', badge: '巴黎協定目標',
-      effects: ['珊瑚礁減少 70–90%', '熱浪頻率增加 5 倍', '海平面上升 40 公分', '北極偶爾無冰'],
-      yourTag: '✓ 你正在貢獻這個未來'
-    },
-    {
-      id: 't20', deg: '+2.0°C', badge: '當前全球軌跡',
-      effects: ['珊瑚礁幾乎全滅（99%）', '4 億人面臨缺水危機', '海平面上升 60 公分', '北極夏天完全無冰'],
-      yourTag: '✓ 你正在貢獻這個未來'
-    },
-    {
-      id: 't30', deg: '+3.0°C', badge: '高排放情境',
-      effects: ['多個沿海城市永久淹沒', '大規模物種滅絕啟動', '10 億人被迫氣候遷移', '部分地區不適合人類居住'],
-      yourTag: '✓ 你正在貢獻這個未來'
-    },
+  const myLevel = getMyLevel(total);
+
+  const editions = [
+    { id:'t15', label:'1.5°C 版', date:'巴黎協定目標 · 2045年', badge:'巴黎協定目標',
+      headline:'台灣珊瑚礁復育成功，墾丁重現 1980 年代的壯麗景色',
+      effects:['珊瑚礁減少 70–90%', '熱浪頻率增加 5 倍', '海平面上升 40 公分', '北極夏天偶爾無冰'],
+      flag:'你正在努力往這個未來前進 ✓' },
+    { id:'t20', label:'2.0°C 版', date:'當前全球軌跡 · 2060年', badge:'當前全球軌跡',
+      headline:'全球珊瑚礁 99% 消失，UN 宣布進入「海洋喪期」',
+      effects:['珊瑚礁幾乎全滅（99%）', '4 億人面臨缺水危機', '海平面上升 60 公分', '北極夏天完全無冰'],
+      flag:'你的選擇正在貢獻這個未來 ✓' },
+    { id:'t30', label:'3.0°C 版', date:'高排放情境 · 2080年', badge:'高排放情境',
+      headline:'台南、高雄市區多處永久淹沒，政府啟動強制遷村計畫',
+      effects:['多個沿海城市永久淹沒', '大規模物種滅絕啟動', '10 億人被迫氣候遷移', '部分地區不再適合人居'],
+      flag:'你的選擇正在貢獻這個未來 ✓' },
   ];
-  document.getElementById('temp-grid').innerHTML = tempScenarios.map(s => `
-    <div class="temp-card ${s.id} ${s.id === myLevel ? 'active' : ''}">
-      <div class="temp-card-bg"></div>
-      <div class="temp-badge">${s.badge}</div>
-      <div class="temp-degree">${s.deg}</div>
-      <ul class="temp-effects">
-        ${s.effects.map(e => `<li>${e}</li>`).join('')}
-      </ul>
-      <div class="temp-your-tag">${s.yourTag}</div>
-    </div>
-  `).join('');
 
-  // Rule-based recommendations
-  buildRecommendations(total);
-
-  // One action
-  buildOneAction();
+  document.getElementById('temp-editions').innerHTML = editions.map(e=>`
+    <div class="te ${e.id} ${e.id===myLevel?'active-temp':''}">
+      <div class="te-masthead">
+        <div class="te-name">${e.label}</div>
+        <div class="te-date">${e.date}</div>
+      </div>
+      <div class="te-body">
+        <span class="te-temp-badge">${e.badge}</span>
+        <div class="te-headline">${e.headline}</div>
+        <ul class="te-effects">${e.effects.map(f=>`<li>${f}</li>`).join('')}</ul>
+        <div class="te-your-flag">${e.flag}</div>
+      </div>
+    </div>`).join('');
 }
 
 /* ── RECOMMENDATIONS ── */
-function buildRecommendations(total) {
-  // Sort answers by kg, take top 3 with an alt option
+function buildRecs(total) {
   const sorted = Object.entries(answers)
     .map(([qId, ans]) => {
-      const q = questions.find(q => q.id === parseInt(qId));
-      const chosen = q.options.find(o => o.kg === ans.kg);
-      const minOpt = q.options.reduce((a, b) => a.kg < b.kg ? a : b);
+      const q = questions.find(q=>q.id===parseInt(qId));
+      const minOpt = q.options.reduce((a,b)=>a.kg<b.kg?a:b);
+      const chosen = q.options.find(o=>o.kg===ans.kg);
       const savings = ans.kg - minOpt.kg;
-      return { q, ans, chosen, minOpt, savings };
+      return {q, ans, minOpt, chosen, savings};
     })
-    .filter(item => item.savings > 0.05 && item.chosen.altLabel)
-    .sort((a, b) => b.savings - a.savings)
-    .slice(0, 3);
+    .filter(item => item.savings > 0.05 && item.chosen?.altLabel)
+    .sort((a,b) => b.savings - a.savings)
+    .slice(0,3);
 
-  if (sorted.length === 0) {
-    document.getElementById('rec-list').innerHTML = `
-      <div style="padding:24px;color:var(--muted);font-size:0.85rem;">
-        你的選擇已經很低碳了！繼續保持 🎉
-      </div>`;
+  if (!sorted.length) {
+    document.getElementById('rec-list').innerHTML = `<div style="padding:24px;color:var(--muted);font-size:0.82rem;border:1px solid var(--border);border-radius:2px;">你今天的選擇已經很低碳了 🎉 繼續保持！</div>`;
     return;
   }
 
-  document.getElementById('rec-list').innerHTML = sorted.map((item, i) => {
-    const saveDay = item.savings;
-    const saveWeek = saveDay * 7;
-    const saveYear = saveDay * 365;
-    const trees = Math.round(saveYear / 21);
-    const carKm = Math.round(saveYear / 0.173);
-
+  document.getElementById('rec-list').innerHTML = sorted.map((item,i) => {
+    const d = item.savings;
+    const w = d*7; const y = d*365;
+    const trees = Math.round(y/21);
+    const car = Math.round(y/0.173);
     return `
-      <div class="rec-card" style="transition-delay:${i * 0.1}s">
-        <div class="rec-rank">${i + 1}</div>
+      <div class="rec-card" style="transition-delay:${i*0.1}s">
+        <div class="rec-ghost">${i+1}</div>
         <div class="rec-top">
-          <div class="rec-source">
-            <span class="rec-cat-tag">最高排放 #${i + 1} · ${item.q.category}</span>
-            <span class="rec-what">你選了：${item.ans.icon} ${item.ans.label}</span>
+          <div>
+            <div class="rec-cat">最高排放 #${i+1} · ${item.q.category}</div>
+            <div class="rec-what">你選了：${item.ans.icon} ${item.ans.label}</div>
           </div>
-          <div class="rec-current-kg">${item.ans.kg.toFixed(2)}<span>kg CO₂e / 日</span></div>
+          <div class="rec-kg">${item.ans.kg.toFixed(2)}<span>kg CO₂e / 日</span></div>
         </div>
         <div class="rec-arrow">
           <span>改成</span>
-          <span class="rec-arrow-icon">→</span>
+          <span class="rec-arr-icon">→</span>
           <span style="color:var(--text);font-weight:700">${item.minOpt.icon} ${item.chosen.altLabel || item.minOpt.label}</span>
-          <span style="margin-left:auto;font-family:var(--mono);color:var(--green)">- ${saveDay.toFixed(2)} kg</span>
+          <span style="margin-left:auto;font-family:var(--mono);color:#4ade80;font-size:0.7rem">每天 - ${d.toFixed(2)} kg</span>
         </div>
-        <div class="rec-savings">
-          <div class="rec-save-chip">${saveDay.toFixed(2)} kg<span>每天</span></div>
-          <div class="rec-save-chip">${saveWeek.toFixed(1)} kg<span>每週</span></div>
-          <div class="rec-save-chip">${Math.round(saveYear)} kg<span>每年</span></div>
+        <div class="rec-chips">
+          <div class="rec-chip">${d.toFixed(2)} kg<span>每天</span></div>
+          <div class="rec-chip">${w.toFixed(1)} kg<span>每週</span></div>
+          <div class="rec-chip">${Math.round(y)} kg<span>每年</span></div>
         </div>
-        <div class="rec-impact-row">
-          <div class="rec-impact-item">🌳 等於種 <em>${trees} 棵樹</em></div>
-          <div class="rec-impact-item">🚗 等於少開 <em>${carKm} 公里</em></div>
+        <div class="rec-impacts">
+          <div class="rec-impact">🌳 等於種 <em>${trees} 棵樹</em></div>
+          <div class="rec-impact">🚗 等於少開 <em>${car} 公里</em></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
-
-  setTimeout(() => {
-    document.querySelectorAll('.rec-card').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), i * 120);
-    });
-  }, 100);
 }
 
 /* ── ONE ACTION ── */
 function buildOneAction() {
   const sorted = Object.entries(answers)
     .map(([qId, ans]) => {
-      const q = questions.find(q => q.id === parseInt(qId));
-      const minOpt = q.options.reduce((a, b) => a.kg < b.kg ? a : b);
+      const q = questions.find(q=>q.id===parseInt(qId));
+      const minOpt = q.options.reduce((a,b)=>a.kg<b.kg?a:b);
       const savings = ans.kg - minOpt.kg;
-      return { q, ans, minOpt, savings };
+      return {q, ans, minOpt, savings};
     })
     .filter(item => item.savings > 0.05 && item.ans.kg > 0)
-    .sort((a, b) => b.savings - a.savings);
+    .sort((a,b) => b.savings - a.savings);
 
-  if (sorted.length === 0) {
-    document.getElementById('one-action-box').innerHTML = `<div class="oat-label">今日建議</div><div class="oat-title">你今天的選擇已經很棒了！明天繼續 💪</div>`;
+  if (!sorted.length) {
+    document.getElementById('one-action').innerHTML = `<div class="oa-label">今日建議</div><div class="oa-title">你今天的選擇已經很棒了！明天繼續 💪</div>`;
     return;
   }
-
   const top = sorted[0];
   const saveYear = top.savings * 365;
   const trees = Math.round(saveYear / 21);
-  const q = top.q;
 
-  document.getElementById('one-action-box').innerHTML = `
-    <div class="oat-label">明天就做一件事</div>
-    <div class="oat-title">
-      ${q.category}：把「${top.ans.icon} ${top.ans.label}」<br>
+  document.getElementById('one-action').innerHTML = `
+    <div class="oa-label">明天就做這一件事</div>
+    <div class="oa-title">
+      ${top.q.category}：把「${top.ans.icon} ${top.ans.label}」<br>
       換成「${top.minOpt.icon} ${top.minOpt.label}」
     </div>
-    <div class="oat-sub">
-      這是你今天所有選擇中，單一改變能帶來最大碳排削減的選項。不需要改變生活方式，只需要這一個選擇。
+    <div class="oa-body">
+      這是你今天所有選擇中，單一改變能帶來最大碳排削減的選項。<br>
+      不需要改變整個生活方式，只需要這一個選擇。
     </div>
-    <div class="oat-save">
+    <div class="oa-save">
       <span>每天省 ${top.savings.toFixed(2)} kg</span>
       <span>·</span>
       <span>每年省 ${Math.round(saveYear)} kg</span>
       <span>·</span>
       <span>等於種 ${trees} 棵樹</span>
-    </div>
-  `;
+    </div>`;
 }
 </script>
 
