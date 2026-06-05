@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 
 /* ══════════════════════════════════════
    DATA
@@ -87,6 +88,11 @@ const questions = [
 ];
 
 /* Dynamic story pairs per category */
+=======
+const { createApp, ref, computed, watch } = Vue;
+
+// Constants for stories
+>>>>>>> Stashed changes
 const STORIES = {
   "交通": {
     change: {
@@ -154,7 +160,11 @@ const STORIES = {
     continue: {
       headline: "電子廢棄物堆積如山，台灣垃圾場面積超越台北市，居民怒告政府",
       subhead: "每年 85 萬噸電子廢棄物：「我們把毒留給了自己的孩子」",
+<<<<<<< Updated upstream
       body: "台北（本報記者 方俊明）—— 環保署最新數據顯示，台灣每年產生 85 萬噸電子廢棄物，其中僅 23% 妥善回收。新北市里長帶居民集體至環保署門口抗議，要求政府正視電子廢棄物對水源和土壤的污染問題。",
+=======
+      body: "台北（本報記者 方俊明）—— 環保署最新數據顯示，台灣每年產生 85 萬噸電子廢棄物，其中僅 23% 妥善回收。新北市里長帶居民集體至環保署門口抗議，要求政府正視電子廢棄物對水源 and 土壤的污染問題。",
+>>>>>>> Stashed changes
       stats: [{l:"夏季均溫", v:"+2.7°C"},{l:"電子廢棄物", v:"85萬噸/年"},{l:"月均電費", v:"NT$2,200"}]
     }
   },
@@ -216,6 +226,7 @@ const STORIES = {
   }
 };
 
+<<<<<<< Updated upstream
 /* ══════════════════════════════════════
    PAGINATION
 ══════════════════════════════════════ */
@@ -281,6 +292,8 @@ function goPage(n) {
 const TOTAL_Q = questions.length;
 let answers = {};
 
+=======
+>>>>>>> Stashed changes
 function getTheme(kg) {
   if (kg < 3)  return { bg:'#0c0a09', accent:'#f0c878', accentGlow:'rgba(240,200,120,0.15)' };
   if (kg < 6)  return { bg:'#080f0c', accent:'#6ee7b7', accentGlow:'rgba(110,231,183,0.15)' };
@@ -289,6 +302,7 @@ function getTheme(kg) {
   return        { bg:'#140608', accent:'#f87171', accentGlow:'rgba(248,113,113,0.12)' };
 }
 
+<<<<<<< Updated upstream
 function applyTheme(kg) {
   const t = getTheme(kg);
   const r = document.documentElement;
@@ -632,3 +646,279 @@ function buildOneAction() {
       <span>等於種 ${trees} 棵樹</span>
     </div>`;
 }
+=======
+createApp({
+  setup() {
+    // Reactive states
+    const currentSection = ref('hero');
+    const currentPage = ref(1);
+    const questions = ref([]);
+    const answers = ref({});
+    const animatedScore = ref(0.0);
+    const verdict = ref('');
+    const verdictDesc = ref('');
+    const page3Triggered = ref(false);
+
+    const pageLabels = ['你的分數', '你的未來', '全球視角', '行動計畫'];
+
+    // Computed properties
+    const totalCO2 = computed(() => {
+      return Object.values(answers.value).reduce((sum, ans) => sum + ans.kg, 0);
+    });
+
+    const answeredCount = computed(() => {
+      return Object.keys(answers.value).length;
+    });
+
+    const progressBarWidth = computed(() => {
+      if (questions.value.length === 0) return '0%';
+      return `${(answeredCount.value / questions.value.length) * 100}%`;
+    });
+
+    const themeAccent = computed(() => {
+      const val = totalCO2.value;
+      if (val < 3)  return '#f0c878';
+      if (val < 6)  return '#6ee7b7';
+      if (val < 10) return '#facc15';
+      if (val < 14) return '#fb923c';
+      return '#f87171';
+    });
+
+    const treesRequired = computed(() => {
+      return Math.round(totalCO2.value / 0.058);
+    });
+
+    const carKmEquiv = computed(() => {
+      return Math.round((totalCO2.value / 0.173) * 10) / 10;
+    });
+
+    const phoneChargesEquiv = computed(() => {
+      return Math.round(totalCO2.value * 122);
+    });
+
+    const endingDate = computed(() => {
+      const now = new Date();
+      return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+    });
+
+    const newspaperStory = computed(() => {
+      if (answeredCount.value === 0) return null;
+      const sorted = Object.entries(answers.value)
+        .map(([qId, ans]) => ({ ...ans, qId: parseInt(qId) }))
+        .sort((a, b) => b.kg - a.kg);
+      const topCat = sorted[0]?.category || '午餐';
+      return STORIES[topCat] || STORIES['午餐'];
+    });
+
+    const benchmarks = computed(() => {
+      const list = [
+        { label: '你今天', meaning: '你的 24 小時碳足跡', kg: totalCO2.value, cls: 'you', color: themeAccent.value },
+        { label: '台灣平均', meaning: '台灣人均每日排放，高居全球前段班', kg: 14.0, cls: 'tw', color: '#facc15' },
+        { label: '全球平均', meaning: '全球人均，仍是巴黎目標的 3.8 倍', kg: 11.5, cls: 'global', color: '#fb923c' },
+        { label: '巴黎協定', meaning: '1.5°C 目標每日上限，地球的生存底線', kg: 3.0, cls: 'paris', color: '#60a5fa' },
+      ];
+      const maxKg = Math.max(...list.map(b => b.kg), 1);
+      return list.map(b => ({
+        ...b,
+        pct: (b.kg / maxKg) * 100
+      }));
+    });
+
+    const myTempLevel = computed(() => {
+      const val = totalCO2.value;
+      if (val < 5) return 't15';
+      if (val < 12) return 't20';
+      return 't30';
+    });
+
+    const tempEditions = [
+      { id:'t15', label:'1.5°C 版', date:'巴黎協定目標 · 2045年', badge:'巴黎協定目標',
+        headline:'台灣珊瑚礁復育成功，墾丁重現 1980 年代的壯麗景色',
+        effects:['珊瑚礁減少 70–90%', '熱浪頻率增加 5 倍', '海平面上升 40 公分', '北極夏天偶爾無冰'],
+        flag:'你正在努力往這個未來前進 ✓' },
+      { id:'t20', label:'2.0°C 版', date:'當前全球軌跡 · 2060年', badge:'當前全球軌跡',
+        headline:'全球珊瑚礁 99% 消失，UN 宣布進入「海洋喪期」',
+        effects:['珊瑚礁幾乎全滅（99%）', '4 億人面臨缺水危機', '海平面上升 60 公分', '北極夏天完全無冰'],
+        flag:'你的選擇正在貢獻這個未來 ✓' },
+      { id:'t30', label:'3.0°C 版', date:'高排放情境 · 2080年', badge:'高排放情境',
+        headline:'台南、高雄市區多處永久淹沒，政府啟動強制遷村計畫',
+        effects:['多個沿海城市永久淹沒', '大規模物種滅絕啟動', '10 億人被迫氣候遷移', '部分地區不再適合人居'],
+        flag:'你的選擇正在貢獻這個未來 ✓' },
+    ];
+
+    const recommendations = computed(() => {
+      if (questions.value.length === 0) return [];
+      const list = [];
+      for (const [qId, ans] of Object.entries(answers.value)) {
+        const q = questions.value.find(item => item.id === parseInt(qId));
+        if (!q) continue;
+        const minOpt = q.options.reduce((a, b) => a.kg < b.kg ? a : b);
+        const chosen = q.options.find(o => o.id === ans.id);
+        const savings = ans.kg - minOpt.kg;
+        if (savings > 0.05 && chosen && chosen.altLabel) {
+          list.push({
+            qId: q.id,
+            category: q.category,
+            ansIcon: ans.icon,
+            ansLabel: ans.label,
+            ansKg: ans.kg,
+            minIcon: minOpt.icon,
+            minLabel: minOpt.label,
+            minAltLabel: chosen.altLabel,
+            savings: savings
+          });
+        }
+      }
+      return list.sort((a, b) => b.savings - a.savings).slice(0, 3);
+    });
+
+    const oneActionRecommendation = computed(() => {
+      if (questions.value.length === 0) return null;
+      const list = [];
+      for (const [qId, ans] of Object.entries(answers.value)) {
+        const q = questions.value.find(item => item.id === parseInt(qId));
+        if (!q) continue;
+        const minOpt = q.options.reduce((a, b) => a.kg < b.kg ? a : b);
+        const savings = ans.kg - minOpt.kg;
+        if (savings > 0.05 && ans.kg > 0) {
+          list.push({
+            category: q.category,
+            ansIcon: ans.icon,
+            ansLabel: ans.label,
+            minIcon: minOpt.icon,
+            minLabel: minOpt.label,
+            savings: savings
+          });
+        }
+      }
+      if (list.length === 0) return null;
+      return list.sort((a, b) => b.savings - a.savings)[0];
+    });
+
+    // Watchers to dynamically update body styles based on the theme
+    watch(totalCO2, (newVal) => {
+      const t = getTheme(newVal);
+      const r = document.documentElement;
+      r.style.setProperty('--bg', t.bg);
+      r.style.setProperty('--accent', t.accent);
+      r.style.setProperty('--accent-glow', t.accentGlow);
+    }, { immediate: true });
+
+    // Methods
+    const startQuiz = async () => {
+      try {
+        const response = await fetch('/api/questions');
+        questions.value = await response.json();
+        currentSection.value = 'quiz';
+        window.scrollTo({ top: 0 });
+      } catch (e) {
+        console.error("Failed to load questions from API:", e);
+      }
+    };
+
+    const pick = (qId, option) => {
+      answers.value[qId] = option;
+      if (answeredCount.value === questions.value.length) {
+        setTimeout(submitResult, 700);
+      }
+    };
+
+    const submitResult = async () => {
+      const payload = {
+        answers: Object.entries(answers.value).map(([qId, o]) => ({
+          question_id: parseInt(qId),
+          option_id: o.id
+        }))
+      };
+      
+      try {
+        const response = await fetch('/api/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        
+        verdict.value = data.verdict;
+        verdictDesc.value = data.description;
+        
+        currentSection.value = 'result';
+        currentPage.value = 1;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        animateScore(data.total_co2);
+      } catch (e) {
+        console.error("Failed to calculate carbon results:", e);
+      }
+    };
+
+    const animateScore = (targetVal) => {
+      const duration = 1200;
+      const startTime = performance.now();
+      const startVal = animatedScore.value;
+
+      const frame = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        animatedScore.value = startVal + (targetVal - startVal) * easeProgress;
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          animatedScore.value = targetVal;
+        }
+      };
+      requestAnimationFrame(frame);
+    };
+
+    const goPage = (n) => {
+      currentPage.value = n;
+      if (n === 3) {
+        page3Triggered.value = false;
+        setTimeout(() => {
+          page3Triggered.value = true;
+        }, 100);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const restartSimulator = () => {
+      answers.value = {};
+      currentSection.value = 'hero';
+      currentPage.value = 1;
+      animatedScore.value = 0.0;
+      page3Triggered.value = false;
+      window.scrollTo({ top: 0 });
+    };
+
+    return {
+      currentSection,
+      currentPage,
+      questions,
+      answers,
+      animatedScore,
+      verdict,
+      verdictDesc,
+      page3Triggered,
+      pageLabels,
+      totalCO2,
+      answeredCount,
+      progressBarWidth,
+      themeAccent,
+      treesRequired,
+      carKmEquiv,
+      phoneChargesEquiv,
+      endingDate,
+      newspaperStory,
+      benchmarks,
+      myTempLevel,
+      tempEditions,
+      recommendations,
+      oneActionRecommendation,
+      startQuiz,
+      pick,
+      goPage,
+      restartSimulator
+    };
+  }
+}).mount('#app');
+>>>>>>> Stashed changes

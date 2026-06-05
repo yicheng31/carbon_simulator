@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 :root {
   --bg: #0c0a09;
   --bg2: #141210;
@@ -185,7 +189,10 @@ color: var(--muted); display: block; margin-top: 2px;
 
 /* ── QUIZ ── */
 #quiz-section {
+<<<<<<< Updated upstream
 display: none;
+=======
+>>>>>>> Stashed changes
 max-width: 780px; margin: 0 auto;
 padding: 80px 20px 110px;
 }
@@ -288,7 +295,11 @@ padding: 10px 24px 14px;
 .mbar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s var(--ease), background 1.5s; }
 
 /* ── RESULT ── */
+<<<<<<< Updated upstream
 #result-section { display: none; max-width: 900px; margin: 0 auto; padding: 80px 20px 80px; }
+=======
+#result-section { max-width: 900px; margin: 0 auto; padding: 80px 20px 80px; }
+>>>>>>> Stashed changes
 
 /* Score block */
 .score-block { padding-bottom: 52px; margin-bottom: 52px; border-bottom: 1px solid var(--border); }

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;700;900&family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<<<<<<< Updated upstream
 
 </head>
 <body>
@@ -151,5 +152,313 @@
 
 <script src="script.js"></script>
 
+=======
+<!-- Load Vue 3 Locally -->
+<script src="vue.global.js"></script>
+</head>
+<body>
+
+<div id="app" v-cloak>
+  <header>
+    <div class="logo" id="logo">◈ Carbon Life</div>
+    <div class="header-r" v-if="currentSection === 'quiz'">
+      <div class="hstat">
+        <span class="hstat-lbl">累積排放</span>
+        <span class="hstat-val" id="h-co2">{{ totalCO2.toFixed(2) }}</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-lbl">進度</span>
+        <span class="hstat-val" id="h-prog">{{ answeredCount }}/{{ questions.length }}</span>
+      </div>
+    </div>
+    <div class="hbar-wrap" v-if="currentSection === 'quiz'">
+      <div class="hbar-fill" id="hbar" :style="{ width: progressBarWidth, background: themeAccent }"></div>
+    </div>
+  </header>
+
+  <div class="mbar" id="mbar" v-show="currentSection === 'quiz'">
+    <div class="mbar-row">
+      <span class="mbar-kg" id="mb-kg" :style="{ color: themeAccent }">{{ totalCO2.toFixed(2) }} kg CO₂e</span>
+      <span class="mbar-prog" id="mb-prog">{{ answeredCount }} / {{ questions.length }} 題</span>
+    </div>
+    <div class="mbar-track">
+      <div class="mbar-fill" id="mb-fill" :style="{ width: progressBarWidth, background: themeAccent }"></div>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero" v-if="currentSection === 'hero'">
+    <div class="hero-grid"></div>
+    <div class="hero-orb"></div>
+    <div class="hero-eyebrow">24 Hour Carbon Simulator · 2025</div>
+    <h1 class="hero-title">CARBON<br><em>LIFE</em></h1>
+    <p class="hero-sub">你只是一個普通人。<br>但你今天做的每個小選擇，<br>都在幫地球投票。</p>
+    <button class="start-btn" @click="startQuiz">我準備好了 →</button>
+    <div class="hero-data">
+      <div class="hero-datum"><span class="hero-datum-n">14 kg</span><span class="hero-datum-l">台灣人均每日</span></div>
+      <div class="hero-datum"><span class="hero-datum-n">3 kg</span><span class="hero-datum-l">巴黎協定目標</span></div>
+      <div class="hero-datum"><span class="hero-datum-n">2051</span><span class="hero-datum-l">你看到的未來年份</span></div>
+    </div>
+  </section>
+
+  <!-- QUIZ SECTION -->
+  <section id="quiz-section" v-if="currentSection === 'quiz'">
+    <div class="quiz-top">
+      <span class="quiz-top-title">Carbon Life · 24H 碳足跡模擬</span>
+      <span class="quiz-top-counter" id="qtop-counter">{{ answeredCount }} / {{ questions.length }} 完成</span>
+    </div>
+    
+    <div v-for="(q, index) in questions" :key="q.id" :id="'qc' + q.id" class="qcard visible" :class="{ answered: answers[q.id] }">
+      <div class="qmeta">
+        <span class="qnum">Q{{ String(q.id).padStart(2, '0') }}</span>
+        <span class="qdot">·</span>
+        <span class="qcat">{{ q.icon }} {{ q.category }}</span>
+        <span class="qsrc" title="數據來源：官方係數資料庫">⚗ 官方係數</span>
+      </div>
+      <div class="qtitle">{{ q.title }}</div>
+      <div class="qdesc">{{ q.desc }}</div>
+      <div class="opts">
+        <button v-for="o in q.options" :key="o.id" class="opt" :class="{ selected: answers[q.id]?.id === o.id }" @click="pick(q.id, o)">
+          <span class="opt-badge" :class="o.badge === 'l' ? 'bl' : (o.badge === 'm' ? 'bm' : 'bh')">
+            {{ o.badge === 'l' ? '低碳' : (o.badge === 'm' ? '中碳' : '高碳') }}
+          </span>
+          <span class="opt-ico">{{ o.icon }}</span>
+          <span class="opt-lbl">{{ o.label }}</span>
+          <span class="opt-kg">{{ o.note }}</span>
+          <span class="opt-src-s">📋 {{ o.src.split('｜')[0] }}</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT SECTION -->
+  <section id="result-section" v-if="currentSection === 'result'">
+    <!-- PAGE NAV -->
+    <div class="pnav show" id="pnav">
+      <div class="pnav-dots" id="pnav-dots">
+        <div v-for="page in 4" :key="page" class="pdot" :class="{ active: currentPage === page }" @click="goPage(page)" :title="pageLabels[page - 1]"></div>
+      </div>
+      <div class="pnav-label" id="pnav-label">{{ currentPage }} / 4 · {{ pageLabels[currentPage - 1] }}</div>
+    </div>
+
+    <!-- PAGE 1: Score -->
+    <div class="rpage" id="rpage-1" :class="{ active: currentPage === 1 }">
+      <div class="score-block">
+        <div class="score-eyebrow">你的 24H 碳足跡報告</div>
+        <div class="score-row">
+          <div class="score-big" id="r-score" :style="{ color: themeAccent }">{{ animatedScore.toFixed(2) }}</div>
+          <div class="score-unit-col">
+            <span class="score-unit">kg CO₂e</span>
+            <span class="score-sub">/ 日</span>
+          </div>
+        </div>
+        <div class="score-verdict" id="r-verdict">{{ verdict }}</div>
+        <div class="score-desc" id="r-desc">{{ verdictDesc }}</div>
+        <div class="equiv-chips" id="equiv-chips">
+          <div class="equiv-chip">
+            <span class="equiv-chip-ico">🌳</span>
+            <div class="equiv-chip-txt"> need <strong>{{ treesRequired }} 棵樹</strong><br>吸碳一天</div>
+          </div>
+          <div class="equiv-chip">
+            <span class="equiv-chip-ico">🚗</span>
+            <div class="equiv-chip-txt">等於開車<br><strong>{{ carKmEquiv }} 公里</strong></div>
+          </div>
+          <div class="equiv-chip">
+            <span class="equiv-chip-ico">📱</span>
+            <div class="equiv-chip-txt">等於手機<br><strong>充電 {{ phoneChargesEquiv }} 次</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="page-nav-bar">
+        <span></span>
+        <button class="pnext-btn" @click="goPage(2)">你寫出的未來 →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Newspaper -->
+    <div class="rpage" id="rpage-2" :class="{ active: currentPage === 2 }">
+      <div class="rblock">
+        <div class="sec-lbl">你寫出的兩種未來</div>
+        <div class="newspaper" id="newspaper" v-if="newspaperStory">
+          <div class="np-masthead">
+            <span class="np-name">THE CARBON TIMES</span>
+            <span class="np-tagline">根據你今天 {{ totalCO2.toFixed(2) }} kg CO₂e 的生活方式推算</span>
+            <div class="np-meta-row">
+              <span>台灣特別報導版</span>
+              <span>2051年 8 月 12 日</span>
+              <span>第 1 版 / 共 1 版</span>
+            </div>
+          </div>
+          <div class="np-columns">
+            <div class="np-col left">
+              <span class="np-col-header change">✓ 如果你從明天改變</span>
+              <div class="np-headline">{{ newspaperStory.change.headline }}</div>
+              <div class="np-subhead">{{ newspaperStory.change.subhead }}</div>
+              <div class="np-byline">本報記者 · 氣候希望特派</div>
+              <div class="np-body">{{ newspaperStory.change.body }}</div>
+              <div class="np-stats">
+                <div v-for="s in newspaperStory.change.stats" :key="s.l" class="np-stat-row">
+                  <span class="np-stat-lbl">{{ s.l }}</span>
+                  <span class="np-stat-val">{{ s.v }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="np-divider"></div>
+            <div class="np-col right">
+              <span class="np-col-header continue">✕ 你繼續今天的生活方式</span>
+              <div class="np-headline">{{ newspaperStory.continue.headline }}</div>
+              <div class="np-subhead">{{ newspaperStory.continue.subhead }}</div>
+              <div class="np-byline">本報記者 · 氣候危機特派</div>
+              <div class="np-body">{{ newspaperStory.continue.body }}</div>
+              <div class="np-stats">
+                <div v-for="s in newspaperStory.continue.stats" :key="s.l" class="np-stat-row">
+                  <span class="np-stat-lbl">{{ s.l }}</span>
+                  <span class="np-stat-val">{{ s.v }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-nav-bar">
+        <button class="pprev-btn" @click="goPage(1)">← 返回</button>
+        <button class="pnext-btn" @click="goPage(3)">全球視角 →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 3: Global context -->
+    <div class="rpage" id="rpage-3" :class="{ active: currentPage === 3 }">
+      <div class="rblock">
+        <div class="sec-lbl">與全球基準比較</div>
+        <div class="bench-list" id="bench-list">
+          <div v-for="b in benchmarks" :key="b.label" class="bench-row">
+            <div><span class="bench-lbl">{{ b.label }}</span><span class="bench-meaning">{{ b.meaning }}</span></div>
+            <div class="bench-bar-wrap">
+              <div class="bench-bar-fill" :style="{ background: b.color, width: page3Triggered ? b.pct + '%' : '0%' }"></div>
+            </div>
+            <div class="bench-val"><strong>{{ b.kg.toFixed(1) }}</strong> kg/日</div>
+          </div>
+        </div>
+      </div>
+      <div class="rblock">
+        <div class="sec-lbl">如果全球都像你這樣生活</div>
+        <div class="temp-editions" id="temp-editions">
+          <div v-for="e in tempEditions" :key="e.id" class="te" :class="[e.id, { 'active-temp': e.id === myTempLevel }]">
+            <div class="te-masthead">
+              <div class="te-name">{{ e.label }}</div>
+              <div class="te-date">{{ e.date }}</div>
+            </div>
+            <div class="te-body">
+              <span class="te-temp-badge">{{ e.badge }}</span>
+              <div class="te-headline">{{ e.headline }}</div>
+              <ul class="te-effects">
+                <li v-for="eff in e.effects" :key="eff">{{ eff }}</li>
+              </ul>
+              <div class="te-your-flag">{{ e.flag }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-nav-bar">
+        <button class="pprev-btn" @click="goPage(2)">← 返回</button>
+        <button class="pnext-btn" @click="goPage(4)">行動計畫 →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 4: Action plan -->
+    <div class="rpage" id="rpage-4" :class="{ active: currentPage === 4 }">
+      <div class="rblock">
+        <div class="sec-lbl">你的個人減碳建議</div>
+        <div class="rec-list" id="rec-list">
+          <div v-if="recommendations.length === 0" style="padding:24px;color:var(--muted);font-size:0.82rem;border:1px solid var(--border);border-radius:2px;">
+            你今天的選擇已經很低碳了 🎉 繼續保持！
+          </div>
+          <div v-else v-for="(rec, index) in recommendations" :key="rec.qId" class="rec-card visible" :style="{ transitionDelay: (index * 120) + 'ms' }">
+            <div class="rec-ghost">{{ index + 1 }}</div>
+            <div class="rec-top">
+              <div>
+                <div class="rec-cat">最高排放 #{{ index + 1 }} · {{ rec.category }}</div>
+                <div class="rec-what">你選了：{{ rec.ansIcon }} {{ rec.ansLabel }}</div>
+              </div>
+              <div class="rec-kg" :style="{ color: 'var(--hot)' }">{{ rec.ansKg.toFixed(2) }}<span>kg CO₂e / 日</span></div>
+            </div>
+            <div class="rec-arrow">
+              <span>改成</span>
+              <span class="rec-arr-icon">→</span>
+              <span style="color:var(--text);font-weight:700">{{ rec.minIcon }} {{ rec.minAltLabel || rec.minLabel }}</span>
+              <span style="margin-left:auto;font-family:var(--mono);color:#4ade80;font-size:0.7rem">每天 - {{ rec.savings.toFixed(2) }} kg</span>
+            </div>
+            <div class="rec-chips">
+              <div class="rec-chip">{{ rec.savings.toFixed(2) }} kg<span>每天</span></div>
+              <div class="rec-chip">{{ (rec.savings * 7).toFixed(1) }} kg<span>每週</span></div>
+              <div class="rec-chip">{{ Math.round(rec.savings * 365) }} kg<span>每年</span></div>
+            </div>
+            <div class="rec-impacts">
+              <div class="rec-impact">🌳 等於種 <em>{{ Math.round((rec.savings * 365) / 21) }} 棵樹</em></div>
+              <div class="rec-impact">🚗 等於少開 <em>{{ Math.round((rec.savings * 365) / 0.173) }} 公里</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rblock">
+        <div class="sec-lbl">明天就做這一件事</div>
+        <div class="one-action" id="one-action">
+          <div v-if="!oneActionRecommendation">
+            <div class="oa-label">今日建議</div>
+            <div class="oa-title">你今天的選擇已經很棒了！明天繼續 💪</div>
+          </div>
+          <div v-else>
+            <div class="oa-label">明天就做這一件事</div>
+            <div class="oa-title">
+              {{ oneActionRecommendation.category }}：把「{{ oneActionRecommendation.ansIcon }} {{ oneActionRecommendation.ansLabel }}」<br>
+              換成「{{ oneActionRecommendation.minIcon }} {{ oneActionRecommendation.minLabel }}」
+            </div>
+            <div class="oa-body">
+              這是你今天所有選擇中，單一改變能帶來最大碳排削減的選項。<br>
+              不需要改變整個生活方式，只需要這一個選擇。
+            </div>
+            <div class="oa-save">
+              <span>每天省 {{ oneActionRecommendation.savings.toFixed(2) }} kg</span>
+              <span>·</span>
+              <span>每年省 {{ Math.round(oneActionRecommendation.savings * 365) }} kg</span>
+              <span>·</span>
+              <span>等於種 {{ Math.round((oneActionRecommendation.savings * 365) / 21) }} 棵樹</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-box">
+        <div class="ds-title">數據引用來源 · Data Sources</div>
+        <ul class="ds-list">
+          <li>環境部「碳足跡排放係數資料庫」CFP_P_02（快照日期 2026-05）<a href="https://data.moenv.gov.tw/dataset/detail/CFP_P_02" target="_blank">↗ 開放資料平台</a></li>
+          <li>環境部「產品碳足跡資訊網」— 蔬食便當 1.0 kg、葷食便當均值 3.25 kg<a href="https://cfp.moenv.gov.tw" target="_blank">↗ 係數資料庫</a></li>
+          <li>經濟部能源署 112 年電力排碳係數：0.494 kgCO₂/度</li>
+          <li>交通部 111 年民眾日常使用運具狀況調查</li>
+          <li>桃園市政府環保局「低碳活動指引評核項目說明 PLUS 版 v2」</li>
+          <li>環境部氣候變遷署「溫室氣體排放係數管理表 6.0.4 版」</li>
+        </ul>
+      </div>
+      <div class="page-nav-bar">
+        <button class="pprev-btn" @click="goPage(3)">← 返回</button>
+        <button class="restart-btn" @click="restartSimulator">↺ 重新模擬</button>
+      </div>
+
+      <div class="ending">
+        <div class="ending-echo">CARBON<br><em>LIFE</em></div>
+        <div class="ending-rule"></div>
+        <div class="ending-colophon">
+          <span class="ending-logo">◈ Carbon Life</span>
+          <span class="ending-score">你今天的碳足跡：{{ totalCO2.toFixed(2) }} kg CO₂e</span>
+          <span class="ending-date">記錄於 {{ endingDate }}</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script src="script.js"></script>
+
+>>>>>>> Stashed changes
 </body>
 </html>
