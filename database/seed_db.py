@@ -1,7 +1,9 @@
 import sqlite3
-import os
+from pathlib import Path
 
-DB_FILE = "carbon_simulator.db"
+BASE_DIR = Path(__file__).resolve().parent
+DB_FILE = BASE_DIR / "carbon_simulator.db"
+SCHEMA_FILE = BASE_DIR / "schema.sql"
 
 questions = [
     {
@@ -139,7 +141,7 @@ def seed():
     
     # Read schema
     print("Running schema.sql...")
-    with open("schema.sql", "r", encoding="utf-8") as f:
+    with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
         schema_sql = f.read()
     
     cursor.executescript(schema_sql)

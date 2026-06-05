@@ -5,11 +5,15 @@ from fastapi.responses import FileResponse
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 import sqlite3
+from pathlib import Path
 from typing import List
 
 app = FastAPI()
 
-DB_FILE = "carbon_simulator.db"
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BASE_DIR.parent
+FRONTEND_DIR = PROJECT_DIR / "frontend"
+DB_FILE = PROJECT_DIR / "database" / "carbon_simulator.db"
 
 # Pydantic models for request bodies
 class AnswerItem(BaseModel):
@@ -153,17 +157,17 @@ def calculate(req: CalculateRequest):
 # Route to serve the frontend client pages
 @app.get("/")
 def read_root():
-    return FileResponse("index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 @app.get("/style.css")
 def read_style():
-    return FileResponse("style.css")
+    return FileResponse(FRONTEND_DIR / "style.css")
 
 @app.get("/script.js")
 def read_script():
-    return FileResponse("script.js")
+    return FileResponse(FRONTEND_DIR / "script.js")
 
 @app.get("/vue.global.js")
 def read_vue():
-    return FileResponse("vue.global.js")
+    return FileResponse(FRONTEND_DIR / "vue.global.js")
 
