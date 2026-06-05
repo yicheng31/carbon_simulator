@@ -385,6 +385,51 @@ function startQuiz() {
   window.scrollTo({top:0});
 }
 
+function restartSimulator() {
+  answers = {};
+  currentPage = 1;
+  applyTheme(0);
+
+  document.getElementById('hero').style.display = '';
+  document.getElementById('quiz-section').style.display = 'none';
+  document.getElementById('quiz-section').innerHTML = '';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('mbar').style.display = 'none';
+
+  document.getElementById('h-co2').textContent = '\u2014';
+  document.getElementById('h-prog').textContent = `0/${TOTAL_Q}`;
+  document.getElementById('hbar').style.width = '0%';
+  document.getElementById('mb-kg').textContent = '0.00 kg CO\u2082e';
+  document.getElementById('mb-prog').textContent = `0 / ${TOTAL_Q} \u984c`;
+  document.getElementById('mb-fill').style.width = '0%';
+
+  document.getElementById('pnav').classList.remove('show');
+  document.getElementById('pnav-dots').innerHTML = '';
+  document.getElementById('pnav-label').textContent = '';
+  for (let i = 1; i <= TOTAL_PAGES; i++) {
+    document.getElementById(`rpage-${i}`)?.classList.remove('active');
+  }
+
+  document.getElementById('r-score').textContent = '0.00';
+  document.getElementById('r-verdict').textContent = '';
+  document.getElementById('r-desc').textContent = '';
+  document.getElementById('equiv-chips').innerHTML = '';
+  document.getElementById('newspaper').innerHTML = '';
+  document.getElementById('bench-list').innerHTML = '';
+  document.getElementById('temp-editions').innerHTML = '';
+  document.getElementById('rec-list').innerHTML = '';
+  document.getElementById('one-action').innerHTML = '';
+  document.getElementById('ending-score').textContent = '';
+  document.getElementById('ending-date').textContent = '';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.startQuiz = startQuiz;
+window.pick = pick;
+window.goPage = goPage;
+window.restartSimulator = restartSimulator;
+
 /* ══════════════════════════════════════
    RESULT
 ══════════════════════════════════════ */
