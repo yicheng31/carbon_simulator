@@ -326,7 +326,7 @@ function buildQuiz() {
       <div class="qmeta">
         <span class="qnum">Q${String(q.id).padStart(2,'0')}</span>
         <span class="qdot">·</span>
-        <span class="qcat">${q.icon} ${q.category}</span>
+        <span class="qcat">${q.icon ?? ''} ${q.category}</span>
         <span class="qsrc" title="數據來源：官方係數資料庫">⚗ 官方係數</span>
       </div>
       <div class="qtitle">${q.title}</div>
