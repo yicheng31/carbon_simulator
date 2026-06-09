@@ -66,7 +66,7 @@ const questions = [
       {label:"瓶裝水 + 手搖飲",      kg:0.60, badge:"m", note:"0.60 kg CO₂e", src:"瓶裝水 0.15/瓶 × 2 + 飲料杯", altLabel:"改帶自己的水壺"},
       {label:"進口氣泡水 + 連鎖咖啡", kg:1.00, badge:"h", note:"1.00 kg CO₂e", src:"進口包材高碳排 + 空運咖啡豆", altLabel:"改帶自己的水壺"},
     ]},
-  { id:8, category:"娛樂", icon:"📺", sourceKey:"energy",
+  { id:8, category:"娛樂", sourceKey:"energy",
     title:"晚上的娛樂方式？",
     desc:"照明用電係數 0.494 kgCO₂/度；PC 遊戲主機約 300W。串流追劇比想像中低碳許多。",
     options:[
@@ -75,7 +75,7 @@ const questions = [
       {label:"電玩遊戲（PC）",     kg:0.44, badge:"m", note:"0.44 kg CO₂e", src:"PC 300W × 3hr × 0.494", altLabel:"改選串流或閱讀"},
       {label:"戶外大型演唱會",     kg:1.20, badge:"h", note:"1.20 kg CO₂e", src:"場館電力 + 交通分攤 + 冷氣", altLabel:"改選戶外小型活動"},
     ]},
-  { id:9, category:"晚餐", icon:"🍽️", sourceKey:"food",
+  { id:9, category:"晚餐",  sourceKey:"food",
     title:"晚餐選擇？",
     desc:"官方數據：蔬食便當 1.0 kgCO₂e、葷食均值 3.25 kgCO₂e；一週一日蔬食，一年可減碳 101.4 kg。",
     options:[
@@ -327,16 +327,15 @@ function buildQuiz() {
       <div class="qmeta">
         <span class="qnum">Q${String(q.id).padStart(2,'0')}</span>
         <span class="qdot">·</span>
-        <span class="qcat">${q.icon} ${q.category}</span>
+        <span class="qcat"> ${q.category}</span>
         <span class="qsrc" title="數據來源：官方係數資料庫">⚗ 官方係數</span>
       </div>
       <div class="qtitle">${q.title}</div>
       <div class="qdesc">${q.desc}</div>
       <div class="opts">
         ${q.options.map(o => `
-          <button class="opt" onclick="pick(${q.id},${o.kg},'${o.icon}','${q.category}','${(o.label||'').replace(/'/g,"\\'")}',this)">
+          <button class="opt" onclick="pick(${q.id},${o.kg},'${q.category}','${(o.label||'').replace(/'/g,"\\'")}',this)">
             <span class="opt-badge ${o.badge==='l'?'bl':o.badge==='m'?'bm':'bh'}">${o.badge==='l'?'低碳':o.badge==='m'?'中碳':'高碳'}</span>
-            <span class="opt-ico">${o.icon}</span>
             <span class="opt-lbl">${o.label}</span>
             <span class="opt-kg">${o.note}</span>
             <span class="opt-src-s">📋 ${o.src.split('｜')[0]}</span>
