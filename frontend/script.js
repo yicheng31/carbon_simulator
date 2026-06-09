@@ -647,14 +647,14 @@ function buildRecs(total) {
         <div class="rec-top">
           <div>
             <div class="rec-cat">最高排放 #${i+1} · ${item.q.category}</div>
-            <div class="rec-what">你選了：${item.ans.icon} ${item.ans.label}</div>
+            <div class="rec-what">你選了： ${item.ans.label}</div>
           </div>
           <div class="rec-kg">${item.ans.kg.toFixed(2)}<span>kg CO₂e / 日</span></div>
         </div>
         <div class="rec-arrow">
           <span>改成</span>
           <span class="rec-arr-icon">→</span>
-          <span style="color:var(--text);font-weight:700">${item.minOpt.icon} ${item.chosen.altLabel || item.minOpt.label}</span>
+          <span style="color:var(--text);font-weight:700"> ${item.chosen.altLabel || item.minOpt.label}</span>
           <span style="margin-left:auto;font-family:var(--mono);color:#4ade80;font-size:0.7rem">每天 - ${d.toFixed(2)} kg</span>
         </div>
         <div class="rec-chips">
@@ -693,8 +693,8 @@ function buildOneAction() {
   document.getElementById('one-action').innerHTML = `
     <div class="oa-label">明天就做這一件事</div>
     <div class="oa-title">
-      ${top.q.category}：把「${top.ans.icon} ${top.ans.label}」<br>
-      換成「${top.minOpt.icon} ${top.minOpt.label}」
+      ${top.q.category}：把「 ${top.ans.label}」<br>
+      換成「 ${top.minOpt.label}」
     </div>
     <div class="oa-body">
       這是你今天所有選擇中，單一改變能帶來最大碳排削減的選項。<br>
