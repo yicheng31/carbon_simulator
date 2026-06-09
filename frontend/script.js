@@ -1,4 +1,3 @@
-
 /* ══════════════════════════════════════
    DATA
 ══════════════════════════════════════ */
@@ -66,7 +65,7 @@ const questions = [
       {label:"瓶裝水 + 手搖飲",      kg:0.60, badge:"m", note:"0.60 kg CO₂e", src:"瓶裝水 0.15/瓶 × 2 + 飲料杯", altLabel:"改帶自己的水壺"},
       {label:"進口氣泡水 + 連鎖咖啡", kg:1.00, badge:"h", note:"1.00 kg CO₂e", src:"進口包材高碳排 + 空運咖啡豆", altLabel:"改帶自己的水壺"},
     ]},
-  { id:8, category:"娛樂", sourceKey:"energy",
+  { id:8, category:"娛樂", icon:"📺", sourceKey:"energy",
     title:"晚上的娛樂方式？",
     desc:"照明用電係數 0.494 kgCO₂/度；PC 遊戲主機約 300W。串流追劇比想像中低碳許多。",
     options:[
@@ -75,7 +74,7 @@ const questions = [
       {label:"電玩遊戲（PC）",     kg:0.44, badge:"m", note:"0.44 kg CO₂e", src:"PC 300W × 3hr × 0.494", altLabel:"改選串流或閱讀"},
       {label:"戶外大型演唱會",     kg:1.20, badge:"h", note:"1.20 kg CO₂e", src:"場館電力 + 交通分攤 + 冷氣", altLabel:"改選戶外小型活動"},
     ]},
-  { id:9, category:"晚餐",  sourceKey:"food",
+  { id:9, category:"晚餐", icon:"🍽️", sourceKey:"food",
     title:"晚餐選擇？",
     desc:"官方數據：蔬食便當 1.0 kgCO₂e、葷食均值 3.25 kgCO₂e；一週一日蔬食，一年可減碳 101.4 kg。",
     options:[
@@ -327,15 +326,16 @@ function buildQuiz() {
       <div class="qmeta">
         <span class="qnum">Q${String(q.id).padStart(2,'0')}</span>
         <span class="qdot">·</span>
-        <span class="qcat"> ${q.category}</span>
+        <span class="qcat">${q.icon} ${q.category}</span>
         <span class="qsrc" title="數據來源：官方係數資料庫">⚗ 官方係數</span>
       </div>
       <div class="qtitle">${q.title}</div>
       <div class="qdesc">${q.desc}</div>
       <div class="opts">
         ${q.options.map(o => `
-          <button class="opt" onclick="pick(${q.id},${o.kg},'${q.category}','${(o.label||'').replace(/'/g,"\\'")}',this)">
+          <button class="opt" onclick="pick(${q.id},${o.kg},'${o.icon}','${q.category}','${(o.label||'').replace(/'/g,"\\'")}',this)">
             <span class="opt-badge ${o.badge==='l'?'bl':o.badge==='m'?'bm':'bh'}">${o.badge==='l'?'低碳':o.badge==='m'?'中碳':'高碳'}</span>
+            <span class="opt-ico">${o.icon}</span>
             <span class="opt-lbl">${o.label}</span>
             <span class="opt-kg">${o.note}</span>
             <span class="opt-src-s">📋 ${o.src.split('｜')[0]}</span>
@@ -345,66 +345,35 @@ function buildQuiz() {
     setTimeout(() => card.classList.add('visible'), 55 * i);
   });
 }
-function pick(qId, kg, category, label, btn) {
-  answers[qId] = {
-    kg,
-    category,
-    label
-  };
 
+function pick(qId, kg, icon, category, label, btn) {
+  answers[qId] = { kg, icon, category, label };
   const card = document.getElementById(`qc${qId}`);
-
-  card.querySelectorAll('.opt').forEach(b =>
-    b.classList.remove('selected')
-  );
-
+  card.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   card.classList.add('answered');
-
-  const total = Object.values(answers)
-    .reduce((s,a)=>s+a.kg,0);
-
+  const total = Object.values(answers).reduce((s,a) => s+a.kg, 0);
   const done = Object.keys(answers).length;
-
   applyTheme(total);
 
+  // Update header
   const hco2 = document.getElementById('h-co2');
-  countUp(hco2,total,300);
-
-  document.getElementById('h-prog').textContent =
-    `${done}/${TOTAL_Q}`;
-
+  countUp(hco2, total, 300);
+  document.getElementById('h-prog').textContent = `${done}/${TOTAL_Q}`;
   const hbar = document.getElementById('hbar');
+  hbar.style.width = `${(done/TOTAL_Q)*100}%`;
+  hbar.style.background = getTheme(total).accent;
+  document.getElementById('qtop-counter').textContent = `${done} / ${TOTAL_Q} 完成`;
 
-  hbar.style.width =
-    `${(done/TOTAL_Q)*100}%`;
-
-  hbar.style.background =
-    getTheme(total).accent;
-
-  document.getElementById('qtop-counter').textContent =
-    `${done} / ${TOTAL_Q} 完成`;
-
-  document.getElementById('mb-kg').textContent =
-    total.toFixed(2) + ' kg CO₂e';
-
-  document.getElementById('mb-kg').style.color =
-    getTheme(total).accent;
-
-  document.getElementById('mb-prog').textContent =
-    `${done} / ${TOTAL_Q} 題`;
-
+  // Mobile bar
+  document.getElementById('mb-kg').textContent = total.toFixed(2) + ' kg CO₂e';
+  document.getElementById('mb-kg').style.color = getTheme(total).accent;
+  document.getElementById('mb-prog').textContent = `${done} / ${TOTAL_Q} 題`;
   const mbf = document.getElementById('mb-fill');
+  mbf.style.width = `${(done/TOTAL_Q)*100}%`;
+  mbf.style.background = getTheme(total).accent;
 
-  mbf.style.width =
-    `${(done/TOTAL_Q)*100}%`;
-
-  mbf.style.background =
-    getTheme(total).accent;
-
-  if(done === TOTAL_Q){
-    setTimeout(showResult,700);
-  }
+  if (done === TOTAL_Q) setTimeout(showResult, 700);
 }
 
 function startQuiz() {
@@ -646,14 +615,14 @@ function buildRecs(total) {
         <div class="rec-top">
           <div>
             <div class="rec-cat">最高排放 #${i+1} · ${item.q.category}</div>
-            <div class="rec-what">你選了： ${item.ans.label}</div>
+            <div class="rec-what">你選了：${item.ans.icon} ${item.ans.label}</div>
           </div>
           <div class="rec-kg">${item.ans.kg.toFixed(2)}<span>kg CO₂e / 日</span></div>
         </div>
         <div class="rec-arrow">
           <span>改成</span>
           <span class="rec-arr-icon">→</span>
-          <span style="color:var(--text);font-weight:700"> ${item.chosen.altLabel || item.minOpt.label}</span>
+          <span style="color:var(--text);font-weight:700">${item.minOpt.icon} ${item.chosen.altLabel || item.minOpt.label}</span>
           <span style="margin-left:auto;font-family:var(--mono);color:#4ade80;font-size:0.7rem">每天 - ${d.toFixed(2)} kg</span>
         </div>
         <div class="rec-chips">
@@ -692,8 +661,8 @@ function buildOneAction() {
   document.getElementById('one-action').innerHTML = `
     <div class="oa-label">明天就做這一件事</div>
     <div class="oa-title">
-      ${top.q.category}：把「 ${top.ans.label}」<br>
-      換成「 ${top.minOpt.label}」
+      ${top.q.category}：把「${top.ans.icon} ${top.ans.label}」<br>
+      換成「${top.minOpt.icon} ${top.minOpt.label}」
     </div>
     <div class="oa-body">
       這是你今天所有選擇中，單一改變能帶來最大碳排削減的選項。<br>
