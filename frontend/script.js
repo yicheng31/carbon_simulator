@@ -346,35 +346,66 @@ function buildQuiz() {
     setTimeout(() => card.classList.add('visible'), 55 * i);
   });
 }
+function pick(qId, kg, category, label, btn) {
+  answers[qId] = {
+    kg,
+    category,
+    label
+  };
 
-function pick(qId, kg, icon, category, label, btn) {
-  answers[qId] = { kg, icon, category, label };
   const card = document.getElementById(`qc${qId}`);
-  card.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+
+  card.querySelectorAll('.opt').forEach(b =>
+    b.classList.remove('selected')
+  );
+
   btn.classList.add('selected');
   card.classList.add('answered');
-  const total = Object.values(answers).reduce((s,a) => s+a.kg, 0);
+
+  const total = Object.values(answers)
+    .reduce((s,a)=>s+a.kg,0);
+
   const done = Object.keys(answers).length;
+
   applyTheme(total);
 
-  // Update header
   const hco2 = document.getElementById('h-co2');
-  countUp(hco2, total, 300);
-  document.getElementById('h-prog').textContent = `${done}/${TOTAL_Q}`;
+  countUp(hco2,total,300);
+
+  document.getElementById('h-prog').textContent =
+    `${done}/${TOTAL_Q}`;
+
   const hbar = document.getElementById('hbar');
-  hbar.style.width = `${(done/TOTAL_Q)*100}%`;
-  hbar.style.background = getTheme(total).accent;
-  document.getElementById('qtop-counter').textContent = `${done} / ${TOTAL_Q} 完成`;
 
-  // Mobile bar
-  document.getElementById('mb-kg').textContent = total.toFixed(2) + ' kg CO₂e';
-  document.getElementById('mb-kg').style.color = getTheme(total).accent;
-  document.getElementById('mb-prog').textContent = `${done} / ${TOTAL_Q} 題`;
+  hbar.style.width =
+    `${(done/TOTAL_Q)*100}%`;
+
+  hbar.style.background =
+    getTheme(total).accent;
+
+  document.getElementById('qtop-counter').textContent =
+    `${done} / ${TOTAL_Q} 完成`;
+
+  document.getElementById('mb-kg').textContent =
+    total.toFixed(2) + ' kg CO₂e';
+
+  document.getElementById('mb-kg').style.color =
+    getTheme(total).accent;
+
+  document.getElementById('mb-prog').textContent =
+    `${done} / ${TOTAL_Q} 題`;
+
   const mbf = document.getElementById('mb-fill');
-  mbf.style.width = `${(done/TOTAL_Q)*100}%`;
-  mbf.style.background = getTheme(total).accent;
 
-  if (done === TOTAL_Q) setTimeout(showResult, 700);
+  mbf.style.width =
+    `${(done/TOTAL_Q)*100}%`;
+
+  mbf.style.background =
+    getTheme(total).accent;
+
+  if(done === TOTAL_Q){
+    setTimeout(showResult,700);
+  }
 }
 
 function startQuiz() {
